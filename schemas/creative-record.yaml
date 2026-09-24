@@ -1,0 +1,190 @@
+# Creative record
+#
+# One row per ad, for the audit window. This is the canonical creative dataset for the whole
+# system: sections 7-11 compute from it, the Top Creatives dashboard renders it, the scale
+# matrix joins to it, and every creative finding cites a field on it.
+#
+# It is written once, by agent 59 (creative-database-builder), to
+# audits/<run-id>/creative-database.csv. Nothing downstream re-queries Meta for creative
+# performance. That is the point: a dashboard and a findings list that disagree are worse than
+# either alone, and they disagree the moment two components pull their own data with slightly
+# different windows.
+#
+# Field discipline, in one rule: a column either came from a named source or it was computed
+# from columns that did. Nothing is filled in from judgement. Where a value genuinely is a
+# judgement — angle, persona, awareness level — it carries its own *_source column saying
+# whether a naming convention, a model, or a human put it there.
+
+version: 1
+grain: one row per ad_id per audit window
+written_by: 59-creative-database-builder
+written_to: audits/<run-id>/creative-database.csv
+consumed_by: [60, 61-78, 119-128, 156-162, creative-dashboard]
+
+window:
+  description: >
+    Every row covers the same window, stated once in the file header rather than per row.
+    Mixing windows across rows silently breaks every ranking the dashboard offers.
+  fields:
+    - date_start
+    - date_end
+    - attribution_setting        # e.g. 7d_click_1d_view — MUST be identical across all rows
+    - currency
+    - account_timezone
+
+identity:
+  ad_id:            {source: ads_get_ad_entities, type: string, required: true}
+  ad_name:          {source: ads_get_ad_entities, type: string, required: true}
+  adset_id:         {source: ads_get_ad_entities, type: string, required: true}
+  adset_name:       {source: ads_get_ad_entities, type: string}
+  campaign_id:      {source: ads_get_ad_entities, type: string, required: true}
+  campaign_name:    {source: ads_get_ad_entities, type: string}
+  campaign_objective: {source: ads_get_ad_entities, type: string}
+  creative_id:      {source: ads_get_ad_entities, type: string}
+  status:           {source: ads_get_ad_entities, enum: [ACTIVE, PAUSED, ARCHIVED, DELETED]}
+  effective_status: {source: ads_get_ad_entities, type: string, note: "rejections and limited-delivery states live here, not in status"}
+  first_seen_date:  {source: derived, type: date, note: "first day with impressions in the account's history, not in the window — creative age depends on it"}
+  age_days:         {source: derived, type: integer, formula: "date_end - first_seen_date"}
+
+creative_content:
+  object_type:      {source: ads_get_creatives, enum: [VIDEO, PHOTO, SHARE, STATUS, INVALID], note: "drives the Video/Static filter"}
+  thumbnail_url:    {source: ads_get_creatives, type: url, note: "64px and expires in weeks; never treat as a durable asset reference"}
+  image_url:        {source: ads_get_creatives, type: url}
+  video_id:         {source: ads_get_creatives, type: string}
+  primary_text:     {source: ads_get_creatives, type: text, note: "the body copy — the drill-down drawer and the angle analysis both read it"}
+  headline:         {source: ads_get_creatives, type: text}
+  description:      {source: ads_get_creatives, type: text}
+  cta_type:         {source: ads_get_creatives, type: string, note: "SHOP_NOW, LEARN_MORE, ..."}
+  link_url:         {source: ads_get_creatives, type: url, required: true, note: "joins the ad to its landing page for the promise-handoff score"}
+  utm_parameters:   {source: derived, type: map, note: "parsed from link_url; a null here is a section 2 finding, not a missing field"}
+
+naming_convention:
+  description: >
+    Parsed tokens from ad_name against the account's convention, discovered in section 7 and
+    reported for compliance in section 28. Rule-based creative tagging runs off these, which is
+    why naming compliance is upstream of creative learning rather than cosmetic.
+  parse_status:     {enum: [PARSED, PARTIAL, UNPARSEABLE], required: true}
+  awareness_level:  {enum: [L1_UNAWARE, L2_PROBLEM_AWARE, L3_SOLUTION_AWARE, L4_PRODUCT_AWARE, L5_MOST_AWARE, UNKNOWN]}
+  audience_token:   {type: string, note: "e.g. W_45-55"}
+  angle_token:      {type: string}
+  format_token:     {type: string}
+  destination_token: {type: string}
+  concept_token:    {type: string, note: "two ads sharing this token in one ad set is the concept-mixing finding"}
+  variant_token:    {type: string, note: "V01, V02 — distinguishes an iteration from a new concept"}
+  editor_token:     {type: string}
+  aspect_token:     {type: string}
+
+classification:
+  description: >
+    What the ad actually is. Rule-based from naming_convention where it parsed; model-assigned
+    from ad copy and creative where it did not; human where someone corrected it. The
+    *_source column is not bookkeeping — a section 9 conclusion built on model-inferred angles
+    carries lower confidence than one built on a parsed naming convention, and the reader has
+    to be able to tell which they are reading.
+  concept_type:       {enum: [PROBLEM_SOLUTION, PRODUCT_DEMO, UGC, FOUNDER, TESTIMONIAL, REVIEW, BEFORE_AFTER, COMPARISON, EDUCATIONAL, ENTERTAINMENT, OFFER_PROMOTION, SOCIAL_PROOF, PRODUCT_BENEFITS, PRODUCT_FEATURES, OBJECTION_HANDLING, LIFESTYLE, UNCLASSIFIED]}
+  concept_type_source: {enum: [NAMING_CONVENTION, MODEL, HUMAN], required: true}
+  angle:              {type: string, note: "the customer situation the ad speaks to"}
+  angle_source:       {enum: [NAMING_CONVENTION, MODEL, HUMAN], required: true}
+  hook_text:          {type: text, note: "the opening line, or the first-3-seconds description for video"}
+  proof_type:         {enum: [NONE, TESTIMONIAL, REVIEW_COUNT, CLINICAL, EXPERT, PRESS, UGC_VOLUME, DEMO, GUARANTEE, UNCLASSIFIED]}
+  objection_addressed: {type: string}
+  offer_in_creative:  {type: string, note: "joins to section 21; null means the ad carries no offer, which is itself a finding"}
+  persona:            {type: string, note: "resolves against the account's persona library where one exists"}
+  creator:            {type: string, note: "which UGC creator or talent — a real axis of the angle analysis"}
+  format:             {enum: [SINGLE_IMAGE, SINGLE_VIDEO, CAROUSEL, COLLECTION, DYNAMIC, UNKNOWN]}
+  duration_seconds:   {type: number, note: "video only"}
+  product_ids:        {type: list, note: "joins to section 22 SKU economics — the 'product' axis of the scale matrix"}
+  advantage_plus_creative_enhancements: {type: list, note: "what Meta changed about the asset after upload; an ad you did not fully author"}
+
+delivery:
+  spend:            {source: ads_get_ad_entities, type: currency, required: true}
+  impressions:      {source: ads_get_ad_entities, type: integer, required: true}
+  reach:            {source: ads_get_ad_entities, type: integer}
+  frequency:        {source: ads_get_ad_entities, type: number, note: "impressions / reach — never averaged across ads; recompute from the components"}
+  cpm:              {source: derived, formula: "spend / impressions * 1000"}
+
+attention:
+  description: >
+    The part of the funnel that only exists on Meta. Hook rate answers "did the scroll stop",
+    hold rate answers "did they stay". An ad with a strong hook and a collapsing hold rate is a
+    different problem from one nobody stopped for, and the fixes are not related.
+  video_plays_3s:   {source: ads_get_ad_entities, field: "3_second_video_plays", type: integer,
+                     note: "NOT served at ad level by every connector build — it is accepted at account level and
+                            rejected at ad level on some accounts. Walk the fallback ladder below and record which
+                            rung supplied the value; never silently substitute one rung for another."}
+  video_plays_3s_source: {type: enum, values: [3_SECOND_VIDEO_PLAYS, CONTINUOUS_2_SEC, UNAVAILABLE],
+                     note: "which rung of the ladder produced video_plays_3s. UNAVAILABLE means hook_rate is null."}
+  thruplays:        {source: ads_get_ad_entities, field: video_thruplay_watched_actions, type: integer}
+  hook_rate:        {source: derived, formula: "video_plays_3s / impressions",
+                     note: "video only; null for static, never zero. Also null when video_plays_3s_source is
+                            UNAVAILABLE — a connector that withholds the field is not an account without video,
+                            and the two must not read the same in the dashboard."}
+  # Fallback ladder for video_plays_3s, in order. Record the rung in video_plays_3s_source.
+  #   1. 3_second_video_plays                        the field this schema wants
+  #   2. video_continuous_2_sec_watched_actions      a different metric — label it, never relabel it as 3-second
+  #   3. UNAVAILABLE                                 hook_rate is null; say why, and do not offer a hook-rate ranking
+  hold_rate:        {source: derived, formula: "thruplays / impressions"}
+  video_p25:        {source: ads_get_ad_entities, type: integer}
+  video_p50:        {source: ads_get_ad_entities, type: integer}
+  video_p75:        {source: ads_get_ad_entities, type: integer}
+  video_p100:       {source: ads_get_ad_entities, type: integer}
+  retention_note:   {const: "Quartiles are the retention proxy. Per-second retention curves, storyboards and transcripts are not available from the Meta connector."}
+
+funnel:
+  outbound_clicks:      {source: ads_get_ad_entities, type: integer}
+  outbound_clicks_ctr:  {source: ads_get_ad_entities, type: percent}
+  landing_page_views:   {source: ads_get_ad_entities, field: omni_landing_page_view, type: integer}
+  content_views:        {source: ads_get_ad_entities, type: integer}
+  add_to_cart:          {source: ads_get_ad_entities, type: integer}
+  initiate_checkout:    {source: ads_get_ad_entities, type: integer}
+  purchases:            {source: ads_get_ad_entities, field: "actions:omni_purchase", type: integer}
+  click_to_lpv_rate:    {source: derived, formula: "landing_page_views / outbound_clicks", note: "a low value here is a page-speed or redirect problem, not a creative one"}
+  lpv_to_atc_rate:      {source: derived, formula: "add_to_cart / landing_page_views"}
+  atc_to_ic_rate:       {source: derived, formula: "initiate_checkout / add_to_cart"}
+  ic_to_purchase_rate:  {source: derived, formula: "purchases / initiate_checkout"}
+  purchase_cvr:         {source: derived, formula: "purchases / landing_page_views"}
+
+economics:
+  revenue:              {source: ads_get_ad_entities, field: "action_values:omni_purchase", type: currency}
+  roas:                 {source: ads_get_ad_entities, field: purchase_roas, type: number}
+  cpa:                  {source: ads_get_ad_entities, field: cost_per_omni_purchase, type: currency}
+  aov:                  {source: derived, formula: "revenue / purchases"}
+  contribution_margin:  {source: derived, note: "uses the canonical margin from section 1; never recomputed per agent"}
+  contribution_per_purchase: {source: derived}
+  above_break_even:     {source: derived, type: boolean, note: "roas vs the canonical break-even ROAS from section 1"}
+  new_customer_share:   {source: first_party, note: "requires the Shopify join; null where the join is unavailable, never assumed"}
+  new_customer_cac:     {source: derived}
+
+measurement_quality:
+  description: >
+    Carried per row so a creative ranking cannot quietly be a ranking of measurement artefacts.
+    An ad whose purchases are 60% modelled is not comparable to one whose purchases are
+    observed, and no amount of dashboard polish makes it so.
+  modelled_purchase_share: {type: percent, note: "from section 2/3; if unknown, say UNKNOWN, never 0"}
+  view_through_share:      {type: percent}
+  attribution_window:      {type: string, note: "must equal the file-header window; a row that differs is dropped, not silently included"}
+  evidence_class:          {enum: [KNOWN, OBSERVED, INFERRED], required: true}
+  volume_sufficient:       {type: boolean, note: "false where purchases fall under the significance floor in learning-phase-and-significance; a false here blocks a kill recommendation"}
+
+post_click:
+  description: Bridges the ad to the page it sent traffic to. Section 20 and the CRO band read these.
+  destination_page:     {source: derived, note: "resolved from link_url"}
+  promise_handoff_score: {type: number, range: "0-1", note: "does the page keep the creative's promise — claim, visual and offer continuity"}
+  promise_handoff_gaps: {type: list, note: "named mismatches: claim not repeated, hero image differs, offer absent, price differs"}
+
+lifecycle:
+  description: Section 8 reads these; they are the fatigue verdict, not raw inputs.
+  fatigue_state:      {enum: [SCALING, STABLE, DECAYING, FATIGUED, TOO_EARLY]}
+  fatigue_signals:    {type: list, note: "which signals fired: frequency, ctr_decay, cpm_rise, cpa_rise, roas_decline"}
+  ctr_trend_14d:      {type: percent}
+  cpm_trend_14d:      {type: percent}
+  is_evergreen:       {type: boolean, note: "sustained performance past the account's median creative lifespan"}
+  iteration_candidate: {type: boolean}
+  iterated_from_ad_id: {type: string, note: "links a variant to its parent; without it, iteration ratio in section 10 cannot be computed"}
+
+nullability:
+  rule: >
+    A missing value is null and stays null. Never substitute zero for an unknown: a null hook
+    rate on a static ad and a 0.0 hook rate on a video nobody stopped for mean opposite things,
+    and a ranking that conflates them puts the wrong ads at the top. Where a whole column is
+    unavailable for the account, the dashboard hides that tab rather than rendering it empty.

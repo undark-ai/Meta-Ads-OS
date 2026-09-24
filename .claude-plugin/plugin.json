@@ -1,0 +1,13 @@
+{
+  "name": "meta-ads-os",
+  "description": "Meta Ads e-commerce operating system — evidence-first account audit across 30 sections with a creative-first run order, a Top Creatives dashboard, and a fenced execution lane for applying changes",
+  "version": "1.0.0",
+  "author": {
+    "name": "undark-ai"
+  },
+  "homepage": "https://github.com/undark-ai/Meta-Ads-OS",
+  "repository": "https://github.com/undark-ai/Meta-Ads-OS",
+  "license": "MIT",
+  "agents": "./.claude/agents",
+  "skills": "./.claude/skills"
+}

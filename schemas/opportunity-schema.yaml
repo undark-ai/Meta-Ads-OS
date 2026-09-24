@@ -1,0 +1,29 @@
+title: Opportunity
+description: >
+  One de-duplicated entry in the opportunity matrix — what is broken and what it costs. The
+  growth case lives in scale-matrix.yaml instead; keeping them apart stops the upside being
+  buried under the defect list.
+type: object
+required: [id, section, problem, evidence, business_impact, recommendation, effort, confidence, priority]
+properties:
+  id: {type: string}
+  section: {type: integer, minimum: 1, maximum: 30}
+  problem: {type: string}
+  evidence: {type: string}
+  source_agents: {type: array, items: {type: string}}
+  spend_base: {type: [number, "null"], description: "the spend or revenue the impact is computed against"}
+  business_impact: {type: string}
+  impact_currency: {type: [number, "null"], description: "null where this is a FLAG — never invent a value to fill the column"}
+  impact_is_range: {type: boolean}
+  metric_affected: {type: string}
+  root_cause: {type: string}
+  recommendation: {type: string}
+  implementation: {type: string}
+  effort: {enum: [LOW, MEDIUM, HIGH]}
+  time_to_read_days: {type: integer, description: "how long before the change can be judged — sequencing depends on it"}
+  confidence: {enum: [HIGH, MEDIUM, LOW]}
+  priority: {enum: [P0, P1, P2, P3]}
+  overlaps_with: {type: array, items: {type: string}, description: "other opportunity ids sharing the same spend base; impact is NOT summed across these"}
+  owner: {type: string}
+  dependency: {type: string}
+  status: {type: string}

@@ -1,0 +1,29 @@
+title: Meta Ads Finding
+description: >
+  One material finding. The classification field is the point, not paperwork: a modelled or
+  inferred number must never be emitted as OBSERVED. Where impact cannot be defensibly
+  quantified the finding is a FLAG with no currency value attached — never a fabricated one.
+type: object
+required: [finding_id, section, classification, evidence, source, impact, confidence, recommendation, priority]
+properties:
+  finding_id: {type: string}
+  section: {type: integer, minimum: 1, maximum: 30}
+  classification:
+    enum: [KNOWN, OBSERVED, INFERRED, PLATFORM_STATED, RECOMMENDED]
+    description: >
+      KNOWN — directly supported by an authoritative source.
+      OBSERVED — visible in a report or the browser but not fully reconciled.
+      INFERRED — derived from multiple observations.
+      PLATFORM_STATED — Meta's own assertion about Meta: opportunity score, relevance rankings,
+        EMQ, modelled conversions, vendor lift estimates. Reportable, never proof.
+      RECOMMENDED — a proposed action.
+  evidence: {type: string}
+  source: {type: string}
+  calculation: {type: string}
+  impact: {type: string}
+  impact_currency: {type: [number, "null"], description: "null where the finding is a FLAG"}
+  severity: {enum: [CRITICAL, HIGH, MEDIUM, LOW]}
+  confidence: {enum: [HIGH, MEDIUM, LOW]}
+  recommendation: {type: string}
+  verification: {type: string, description: "how the reader checks this themselves"}
+  priority: {type: string}

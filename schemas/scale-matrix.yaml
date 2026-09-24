@@ -1,0 +1,124 @@
+# Scale matrix
+#
+# The artifact that answers the question the whole system exists for:
+#
+#   Which creative + product + offer combinations are generating incremental profitable
+#   customers, and how much more can we scale them?
+#
+# The opportunity matrix answers "what is broken". This answers "where does the next dollar
+# go". They are different documents because they are read by different people at different
+# moments, and merging them buries the growth case under the defect list.
+#
+# Grain is the combination, not the ad. One winning ad is a data point; the same angle winning
+# across three products and two offers is a strategy, and only the combination grain shows the
+# difference.
+
+version: 1
+grain: one row per (creative_angle x product_group x offer x audience_type)
+written_by: 158-scale-matrix
+written_to: audits/<run-id>/scale-matrix.md
+reads: [creative-database.csv, section 1 economics, section 22 SKU economics, section 26 incrementality]
+
+combination:
+  combination_id:     {type: string, required: true}
+  creative_angle:     {type: string, required: true, note: "from creative-record.classification.angle"}
+  concept_type:       {type: string}
+  product_group:      {type: string, required: true, note: "SKU, collection or hero-product group from section 22"}
+  offer:              {type: string, required: true, note: "null is a real value here — 'no offer' is a combination that competes with the others"}
+  audience_type:      {enum: [BROAD, ADVANTAGE_PLUS, INTEREST, LOOKALIKE, CUSTOMER_LIST, RETARGETING, EXISTING_CUSTOMER]}
+  supporting_ad_ids:  {type: list, required: true, note: "every ad that rolls up here; the reader must be able to go look at them"}
+  ad_count:           {type: integer}
+
+current_state:
+  spend:                      {type: currency, required: true}
+  purchases:                  {type: integer, required: true}
+  revenue:                    {type: currency}
+  roas:                       {type: number}
+  cpa:                        {type: currency}
+  aov:                        {type: currency}
+  new_customer_share:         {type: percent}
+  new_customer_cac:           {type: currency}
+  contribution_margin_total:  {type: currency, note: "contribution, not revenue — this is the number that decides"}
+  contribution_per_dollar:    {type: number, formula: "contribution_margin_total / spend"}
+  spend_share_of_account:     {type: percent}
+
+incrementality:
+  description: >
+    Reported ROAS is not the scale signal. A retargeting combination at 8x that would have
+    converted anyway is worth less than a prospecting combination at 2.1x that creates demand,
+    and scaling on the reported figure moves budget the wrong way. Where incrementality has not
+    been measured, say so — an assumed adjustment is worse than an admitted gap.
+  incrementality_evidence: {enum: [MEASURED_HOLDOUT, MEASURED_GEO, MEASURED_LIFT, INFERRED, NOT_MEASURED], required: true}
+  incremental_roas:        {type: number, note: "null unless evidence is MEASURED_*"}
+  incremental_contribution: {type: currency}
+  confidence:              {enum: [HIGH, MEDIUM, LOW], required: true}
+
+headroom:
+  description: >
+    How much more this combination can absorb before it stops paying. The honest answer is
+    frequently "we cannot tell yet" — the section says so rather than extrapolating a straight
+    line off a two-week window.
+  current_daily_spend:     {type: currency}
+  saturation_signals:      {type: list, note: "frequency ceiling, audience size, CPM trend at higher spend, diminishing purchases per extra dollar"}
+  observed_ceiling:        {type: currency, note: "the highest daily spend at which this combination still cleared break-even; null if never tested above current"}
+  headroom_basis:          {enum: [OBSERVED_AT_HIGHER_SPEND, MODELLED_FROM_TREND, UNTESTED], required: true}
+  recommended_next_spend:  {type: currency}
+  expected_incremental_contribution: {type: currency, note: "null where headroom_basis is UNTESTED — do not invent a number to fill the column"}
+  spend_ceiling_reason:    {type: string}
+
+decision:
+  action:      {enum: [SCALE, HOLD, ITERATE, TEST_HEADROOM, REDUCE, KILL, INSUFFICIENT_DATA], required: true}
+  rationale:   {type: string, required: true}
+  next_step:   {type: string, required: true, note: "one action, specific enough to execute"}
+  blocked_by:  {type: string, note: "what must be true first — usually a measurement fix or an incrementality read"}
+  review_window_days: {type: integer, default: 14}
+  execution_workflow: {type: string, note: "names the execution-lane workflow that would apply it, if the user chooses to"}
+
+gates:
+  description: Rules that decide whether a row may carry a SCALE verdict at all.
+  - id: measurement
+    rule: >
+      No SCALE verdict where the section 2 measurement verdict is RED, or where
+      modelled_purchase_share exceeds the threshold set in modeled-conversions. Scaling on
+      conversion values the audit has just shown to be unreliable is the single most expensive
+      mistake this system exists to prevent.
+  - id: volume
+    rule: >
+      No SCALE or KILL verdict below the purchase floor in learning-phase-and-significance.
+      Under it, the verdict is INSUFFICIENT_DATA and the next step is to buy more data, not to
+      act on the data you have.
+  - id: margin
+    rule: >
+      Contribution, never revenue ROAS. Where margin is assumed rather than derived, publish
+      the verdict across the plausible margin band and state whether it changes. Usually it
+      does not, and the decision is safe without the exact figure.
+  - id: incrementality
+    rule: >
+      A SCALE verdict on a retargeting or existing-customer combination requires incrementality
+      evidence, not reported ROAS. Prospecting combinations may scale on reported figures with
+      confidence lowered and the gap named.
+  - id: no_double_counting
+    rule: >
+      A combination's contribution is not summed with an overlapping one. Where two rows share
+      supporting_ad_ids, reconcile them into one row before totalling — the account-level upside
+      is not the sum of the column.
+
+output_shape:
+  description: The rendered table in scale-matrix.md, ranked by expected incremental contribution.
+  columns:
+    - Combination (angle x product x offer x audience)
+    - Ads
+    - Spend
+    - Purchases
+    - New-customer CAC
+    - Contribution
+    - Contribution / $
+    - Incrementality
+    - Headroom basis
+    - Recommended next spend
+    - Expected incremental contribution
+    - Action
+    - Next step
+  footer_required: >
+    A closing paragraph naming what could not be sized and why, and the one measurement or test
+    that would most improve the next run's version of this table.

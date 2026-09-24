@@ -1,0 +1,43 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: Meta Ads Agent Contract
+description: >
+  The output every audit agent returns. Carried over from Google-Ads-OS near-verbatim — the
+  evidence contract is the part worth keeping identical across both systems — with three
+  Meta-specific additions: section (every agent must belong to one of the 30 or it never runs),
+  measurement_basis (Meta reports modelled conversions, so a result has to say what it stands
+  on), and coverage_state (what the agent writes into the coverage ledger).
+type: object
+required: [agent_id, agent_name, section, status, coverage_state, period, scope, data_sources, data_quality, measurement_basis, key_findings, recommendations, confidence, limitations, dependencies]
+properties:
+  agent_id: {type: string}
+  agent_name: {type: string}
+  section: {type: integer, minimum: 1, maximum: 30, description: "the audit section this agent reports into"}
+  status: {enum: [COMPLETE, PARTIAL, BLOCKED, WATCH]}
+  coverage_state:
+    enum: [FINDINGS, CLEAN, DEGRADED, "N/A", BLOCKED]
+    description: >
+      What this agent contributes to coverage.md. CLEAN is a result and must be stated. N/A
+      means the layer does not exist in this account; BLOCKED means an input was unreachable.
+      Silence is not one of the five.
+  period: {type: string}
+  scope: {type: string}
+  data_sources: {type: array, items: {type: string}}
+  data_quality: {type: string}
+  measurement_basis:
+    type: object
+    description: >
+      What the numbers in this result stand on. An agent that omits this is asserting its
+      figures are observed, and on Meta that is usually false.
+    properties:
+      attribution_window: {type: string}
+      modelled_share: {type: [number, "null"], description: "null means unknown — never write 0 for unknown"}
+      view_through_included: {type: boolean}
+      reconciled_against_first_party: {type: boolean}
+      volume_sufficient: {type: boolean}
+  key_findings: {type: array}
+  metrics: {type: array}
+  opportunities: {type: array}
+  recommendations: {type: array}
+  confidence: {enum: [HIGH, MEDIUM, LOW]}
+  limitations: {type: array}
+  dependencies: {type: array}

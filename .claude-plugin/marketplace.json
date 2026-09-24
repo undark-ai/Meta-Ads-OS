@@ -1,0 +1,19 @@
+{
+  "name": "meta-ads-os",
+  "owner": {
+    "name": "undark-ai",
+    "url": "https://github.com/undark-ai"
+  },
+  "metadata": {
+    "description": "Meta Ads e-commerce operating system for Claude Code — evidence-first account analysis, a creative learning system, and a fenced execution lane",
+    "version": "1.0.0",
+    "repository": "https://github.com/undark-ai/Meta-Ads-OS"
+  },
+  "plugins": [
+    {
+      "name": "meta-ads-os",
+      "description": "Audits a D2C e-commerce Meta ad account end to end across 30 sections: connector discovery, pixel/CAPI/EMQ measurement, mandatory reconciliation of Meta's claim against Shopify and GA4, contribution-margin economics, account structure, bidding and learning phase, a full creative database rendered as a Top Creatives dashboard, fatigue and angle analysis, relevance and auction diagnostics, audiences, prospecting and retargeting, catalog, Advantage+, placements, funnel and post-click CRO, offers, SKU economics, geo and device, attribution and incrementality, Ad Library competitive context, hygiene, budget allocation, and an executive decision page with an opportunity matrix and a creative x product x offer scale matrix. Audit agents are read-only; every change to a live account goes through the fenced execution lane in EXECUTION-PROTOCOL.md.",
+      "source": "./"
+    }
+  ]
+}

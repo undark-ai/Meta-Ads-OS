@@ -1,0 +1,42 @@
+title: Reconciliation
+description: >
+  One compared metric, from section 3. Every full audit produces a set of these before any
+  economic conclusion is drawn. A gap is not a defect until it is diagnosed — most gaps are
+  definitional (click date vs conversion date, gross vs net, refunds, which events count) and
+  the audit's job is to separate those from the ones that mean the numbers are wrong.
+type: object
+required: [metric, source_a, source_b, gap, classification, likely_cause, confidence, authoritative]
+properties:
+  metric: {type: string}
+  source_a: {type: string, description: "usually Meta"}
+  source_b: {type: string, description: "usually Shopify or the commerce platform; GA4 where present"}
+  value_a: {type: [number, "null"]}
+  value_b: {type: [number, "null"]}
+  gap: {type: string}
+  gap_pct: {type: [number, "null"]}
+  classification:
+    enum: [MATCH, EXPLAINED_GAP, UNRESOLVED_GAP, INVALID_COMPARISON]
+    description: >
+      INVALID_COMPARISON is not a failure state — it is the correct answer when the two figures
+      were never measuring the same thing, and calling it a gap would manufacture a finding.
+  alignment_checked:
+    type: array
+    description: What was aligned before comparing. An unaligned comparison is not a reconciliation.
+    items:
+      enum: [DATE_BASIS, TIMEZONE, CURRENCY, ATTRIBUTION_WINDOW, ATTRIBUTION_MODEL, EVENT_SET, COUNTING_TYPE, REFUNDS, GROSS_VS_NET, POPULATION]
+  likely_cause: {type: string}
+  confidence: {enum: [HIGH, MEDIUM, LOW]}
+  authoritative: {type: string, description: "which source wins for this metric, and why"}
+  carries_to_executive_page: {type: boolean, description: "true where the gap is material enough that a reader acting on the headline number would be misled"}
+
+headline_measures:
+  description: >
+    The five figures section 3 must publish in every run, regardless of what else it finds.
+    Blended MER uses TOTAL ad spend across every paid channel — computed on Meta's spend alone
+    it is wrong, not merely partial, and two platforms each claiming the same order is only
+    visible when their claims are summed.
+  - order_claim_ratio     # Meta-claimed purchases / store orders
+  - value_claim_share     # Meta-claimed value / store revenue
+  - blended_mer           # store revenue / TOTAL ad spend, all channels
+  - implied_aov           # Meta-claimed value / Meta-claimed purchases, against store AOV
+  - modelled_share        # share of Meta-claimed purchases that Meta modelled rather than observed

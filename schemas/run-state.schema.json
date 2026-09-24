@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Meta Ads Audit Run State",
+  "description": "Per-run orchestration state. Written by scripts/init-audit-run.sh and updated as the sweep progresses, so an interrupted run still shows exactly which of the 30 sections were reached and what they concluded.",
+  "type": "object",
+  "required": ["run_id", "status", "lane", "scope", "capabilities", "sections", "agents"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "lane": {
+      "enum": ["audit", "execution"],
+      "description": "An audit run never mutates. An execution run is a separate invocation governed by EXECUTION-PROTOCOL.md and never shares a run_id with an audit."
+    },
+    "status": {
+      "enum": ["initialized", "preflight", "discovering", "acquiring", "reconciling", "analyzing", "synthesizing", "completed", "partial", "failed"]
+    },
+    "scope": { "type": "object" },
+    "capabilities": {
+      "type": "object",
+      "description": "Per source: which connector-ladder rung supplied it, the real discovered tool names, and the date coverage."
+    },
+    "sections": {
+      "type": "object",
+      "description": "Keys 1-30. Each value carries the coverage state and, for DEGRADED/BLOCKED, the missing input and its consequence. This is the machine-readable twin of coverage.md.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["state"],
+        "properties": {
+          "state": { "enum": ["PENDING", "FINDINGS", "CLEAN", "DEGRADED", "N/A", "BLOCKED"] },
+          "agents_run": { "type": "array" },
+          "missing_input": { "type": ["string", "null"] },
+          "consequence": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "description": "The two ordering gates. Both record a verdict; neither halts the sweep.",
+      "properties": {
+        "measurement_verdict": { "enum": ["GREEN", "YELLOW", "RED", "PENDING"] },
+        "reconciliation_complete": { "type": "boolean" },
+        "margin_basis": { "enum": ["DERIVED", "USER_SUPPLIED", "ASSUMED", "PENDING"] }
+      }
+    },
+    "agents": { "type": "object" },
+    "datasets": { "type": "object" },
+    "conflicts": { "type": "array" },
+    "opportunities": { "type": "array" },
+    "errors": { "type": "array" }
+  }
+}

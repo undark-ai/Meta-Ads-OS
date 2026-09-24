@@ -1,0 +1,133 @@
+# Source authority registry
+#
+# Which source is allowed to be believed about what. Ported from the Google-Ads-OS
+# source-adapter-registry after the first live Meta run, where three sources disagreed about the
+# same 90 days and nothing in this repository said which one wins for which metric.
+#
+# `authority` is the load-bearing field. It is not a ranking of quality — it says what a source is
+# *entitled to be authoritative about*. Meta is authoritative about Meta's own delivery and worth
+# nothing as a revenue source; Shopify is the reverse. Reading either outside its authority is how
+# a reconciliation turns into an argument.
+#
+# `mode` is always read_only in the audit lane. The execution lane's write surface is governed by
+# meta-mcp-tool-classification.yaml, not by this file.
+
+version: 1
+
+sources:
+  meta_ads:
+    mode: read_only
+    discovery_required: true          # server id differs per account — never hardcode
+    authority: media_delivery_and_platform_claims
+    evidence_class_ceiling: PLATFORM_STATED   # Meta's assertions about Meta are never proof
+    rung: 1
+    note: >
+      Authoritative for spend, impressions, reach, frequency, placement and delivery state.
+      NOT authoritative for revenue, purchases or ROAS until reconciled in section 3.
+
+  commerce_platform:
+    mode: read_only
+    discovery_required: true
+    authority: transaction_and_order_truth
+    evidence_class_ceiling: OBSERVED
+    rung: 1
+    note: >
+      The denominator that makes everything else real. Shopify, WooCommerce and similar.
+      Its per-order *referrer* field is frequently unreliable and is not an attribution source —
+      a live run found it recording 1 email order against GA4's 61.
+
+  ga4:
+    mode: read_only
+    discovery_required: true
+    authority: behavioural_and_cross_channel_comparison
+    evidence_class_ceiling: OBSERVED
+    rung: 2                            # usually via Composio
+    note: >
+      The neutral arbiter between two platforms that both over-claim, and the only source that
+      measures every channel the same way. Directional for attribution, never authoritative for
+      revenue — it undercounts, typically by 5-15% against the commerce platform.
+
+  google_ads:
+    mode: read_only
+    discovery_required: true
+    authority: media_spend_other_channels
+    evidence_class_ceiling: PLATFORM_STATED
+    rung: 2
+    note: >
+      Spend is authoritative and is required for blended MER. Its conversions are a platform
+      claim on its own window and must not be added to Meta's without checking for double-claim.
+
+  search_console:
+    mode: read_only
+    discovery_required: true
+    authority: organic_demand_signal
+    evidence_class_ceiling: OBSERVED
+    rung: 2
+    note: >
+      Brand impressions and clicks are how section 26 separates demand created from demand
+      harvested. A paid-social campaign that lifts brand search is doing something reported
+      ROAS cannot see.
+
+  merchant_center:
+    mode: read_only
+    discovery_required: true
+    authority: feed_and_product_status
+    evidence_class_ceiling: OBSERVED
+    rung: 2
+    note: Required only where Shopping or PMax runs alongside. Feed defects usually affect both channels.
+
+  meta_catalog:
+    mode: read_only
+    discovery_required: true
+    authority: feed_and_product_status
+    evidence_class_ceiling: OBSERVED
+    rung: 1
+    note: Absent on many accounts. Absent is N/A, not BLOCKED.
+
+  email_crm:
+    mode: read_only
+    discovery_required: true
+    authority: first_party_customer_value
+    evidence_class_ceiling: OBSERVED
+    rung: 2
+    note: Section 24's LTV loop. Also a large attributed channel competing for the same credit.
+
+  semrush:
+    mode: read_only
+    discovery_required: true
+    authority: third_party_market_context
+    evidence_class_ceiling: INFERRED   # estimates, never revenue truth
+    rung: 4
+
+  meta_ad_library:
+    mode: read_only
+    discovery_required: false
+    authority: competitor_creative_inventory
+    evidence_class_ceiling: OBSERVED
+    rung: 4
+    note: >
+      Shows what a competitor is running, never that it is profitable. Longevity is not evidence
+      of performance.
+
+  browser:
+    mode: read_only
+    discovery_required: true
+    authority: rendered_experience
+    evidence_class_ceiling: OBSERVED
+    rung: 5
+    note: A conversion rate is a symptom; the rendered page is where the cause is.
+
+  user:
+    mode: read_only
+    discovery_required: false
+    authority: declared_intent_and_context
+    evidence_class_ceiling: USER_SUPPLIED
+    rung: 6
+    note: >
+      Margin inputs, offer intent, why a campaign was paused. Real evidence for intent,
+      never for a measured quantity.
+
+# When two sources disagree about the same metric, `conflict-resolution` decides. The short form:
+# check the definitions before assuming a defect, then prefer the source whose authority covers
+# the metric in question. Where two neutral sources agree and the interested party is the outlier,
+# say so — that pattern is the strongest signal a reconciliation produces.

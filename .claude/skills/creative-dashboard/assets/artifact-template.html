@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top Creatives</title>
+<style>
+  :root { color-scheme: light;
+    --pink:#e6007e; --pink-soft:#fce8f3;
+    --bg:#f7f7f8; --card:#ffffff; --border:#e6e6ea;
+    --text:#141416; --muted:#8a8a93; --green:#0e9f6e; --red:#d94867;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); font-size:13px; }
+  .wrap { max-width:1240px; margin:0 auto; padding:20px 24px 60px; }
+
+  .titlebar { display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+  .titlebar h1 { font-size:20px; font-weight:700; }
+  .trophy { width:28px; height:28px; border-radius:8px; background:var(--pink-soft); display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .subtitle { color:var(--muted); margin-bottom:16px; }
+
+  .controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; }
+  select, input[type="date"], button.ctl {
+    border:1px solid var(--border); background:var(--card); border-radius:8px;
+    padding:6px 10px; font-size:12.5px; color:var(--text); cursor:pointer; font-family:inherit;
+  }
+  button.ctl:hover { border-color:#c9c9d0; }
+  button.ctl.primary { background:var(--pink); border-color:var(--pink); color:#fff; font-weight:600; }
+  .preset { padding:6px 10px; border-radius:8px; border:1px solid var(--border); background:var(--card); cursor:pointer; font-size:12px; color:var(--muted); }
+  .preset.active { border-color:var(--pink); color:var(--pink); background:var(--pink-soft); font-weight:600; }
+
+  .toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px;
+    background:var(--card); border:1px solid var(--border); border-radius:12px; padding:10px 12px; }
+  .tabs { display:flex; gap:2px; background:var(--bg); border-radius:8px; padding:3px; }
+  .tab { padding:5px 14px; border-radius:6px; border:none; background:transparent; cursor:pointer; font-size:12.5px; color:var(--muted); font-family:inherit; }
+  .tab.active { background:var(--card); color:var(--text); font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .spacer { flex:1; }
+  .seg { display:flex; gap:2px; background:var(--bg); border-radius:8px; padding:3px; }
+  .seg button { padding:5px 10px; border:none; border-radius:6px; background:transparent; cursor:pointer; font-size:12px; color:var(--muted); font-family:inherit; }
+  .seg button.active { background:var(--card); color:var(--text); font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+
+  .read { display:flex; gap:20px; align-items:center; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:16px; flex-wrap:wrap; }
+  .read .lead { flex:1; min-width:260px; }
+  .read .lead .who { font-size:10.5px; letter-spacing:.08em; color:var(--muted); font-weight:700; margin-bottom:4px; }
+  .read .lead .msg { font-size:13.5px; font-weight:600; line-height:1.45; }
+  .read .lead .sub { color:var(--muted); margin-top:3px; }
+  .kpi { text-align:right; min-width:90px; }
+  .kpi .lbl { font-size:10px; letter-spacing:.08em; color:var(--muted); font-weight:700; }
+  .kpi .val { font-size:19px; font-weight:700; margin-top:2px; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow .15s; }
+  .card:hover { box-shadow:0 4px 16px rgba(0,0,0,.08); }
+  .thumb { position:relative; aspect-ratio:4/5; background:linear-gradient(135deg,#1c1c22,#3a3a46); overflow:hidden; }
+  .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .thumb .fallback { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:#fff; padding:14px; text-align:center; }
+  .thumb .fallback .big { font-size:26px; }
+  .thumb .fallback .nm { font-size:11px; opacity:.85; line-height:1.4; max-height:60px; overflow:hidden; }
+  .badge { position:absolute; left:8px; bottom:8px; background:rgba(0,0,0,.65); color:#fff; font-size:10px; padding:3px 8px; border-radius:6px; }
+  .rankn { position:absolute; right:8px; bottom:8px; background:rgba(0,0,0,.65); color:#fff; font-size:10px; padding:3px 7px; border-radius:6px; font-weight:700; }
+  .brand-tag { position:absolute; left:8px; top:8px; background:var(--pink); color:#fff; font-size:9.5px; padding:2px 8px; border-radius:5px; font-weight:600; }
+  .cbody { padding:11px 12px 12px; display:flex; flex-direction:column; gap:7px; flex:1; }
+  .cname { font-size:12px; font-weight:600; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:32px; }
+  .mrow { display:flex; justify-content:space-between; font-size:12px; }
+  .mrow .k { color:var(--muted); }
+  .mrow .v { font-weight:600; }
+  .mrow .v.neg { color:var(--red); }
+  .mrow .v.pos { color:var(--green); }
+  .actions { display:flex; gap:6px; margin-top:4px; }
+  .abtn { flex:1; text-align:center; font-size:11px; padding:5px 8px; border-radius:7px; border:1px solid var(--border); background:var(--bg); color:#44444c; text-decoration:none; font-weight:600; }
+  .abtn:hover { border-color:var(--pink); color:var(--pink); }
+  .thumb .loadingp { position:absolute; right:8px; top:8px; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:sp .8s linear infinite; }
+  .chips { display:flex; flex-wrap:wrap; gap:4px; margin-top:2px; }
+  .chip { font-size:10px; padding:2px 7px; border-radius:6px; background:var(--bg); border:1px solid var(--border); color:#55555e; cursor:pointer; white-space:nowrap; }
+  .chip:hover { border-color:var(--pink); color:var(--pink); }
+  .chip.lvl { background:#eef6ef; border-color:#cfe6d4; color:#2e7d43; }
+  .chip.ai { background:#f2ecfd; border-color:#ded1f7; color:#6b3fc9; }
+  .chip.active-filter { background:var(--pink); border-color:var(--pink); color:#fff; }
+  .tagfilter-bar { display:none; align-items:center; gap:8px; margin:-6px 0 12px; color:var(--muted); font-size:12px; }
+  .tagfilter-bar .chip { font-size:11px; }
+  .patterns { background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:16px; overflow:hidden; }
+  .patterns summary { padding:10px 14px; cursor:pointer; font-weight:600; font-size:12.5px; color:#55555e; list-style:none; display:flex; align-items:center; gap:8px; }
+  .patterns summary::before { content:"▸"; transition:transform .15s; color:var(--muted); }
+  .patterns[open] summary::before { transform:rotate(90deg); }
+  .patterns table { width:100%; border-collapse:collapse; font-size:12px; }
+  .patterns th, .patterns td { text-align:left; padding:7px 14px; border-top:1px solid var(--border); }
+  .patterns th { color:var(--muted); font-weight:600; font-size:11px; }
+  .patterns td.num, .patterns th.num { text-align:right; }
+  .status-line { margin-top:auto; padding-top:6px; border-top:1px solid var(--border); display:flex; gap:6px; align-items:center; }
+  .dot { width:6px; height:6px; border-radius:50%; }
+  .st { font-size:11px; color:var(--muted); }
+
+  .cname { cursor:pointer; }
+  .cname:hover { color:var(--pink); }
+  .dover { position:fixed; inset:0; background:rgba(10,10,14,.45); z-index:50; display:flex; justify-content:flex-end; }
+  .drawer { width:min(620px, 96vw); height:100%; background:var(--bg); box-shadow:-8px 0 30px rgba(0,0,0,.25); display:flex; flex-direction:column; animation:slidein .18s ease-out; }
+  @keyframes slidein { from { transform:translateX(40px); opacity:.5; } to { transform:none; opacity:1; } }
+  .dhead { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:16px 18px 12px; background:var(--card); border-bottom:1px solid var(--border); }
+  .dtitle { font-size:14px; font-weight:700; line-height:1.35; word-break:break-all; }
+  .dsub { color:var(--muted); font-size:11.5px; margin-top:3px; }
+  .dbody { overflow-y:auto; padding:14px 18px 40px; display:flex; flex-direction:column; gap:12px; }
+  .dsec { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 14px; }
+  .dsec h3 { font-size:10.5px; letter-spacing:.08em; color:var(--muted); font-weight:700; margin-bottom:8px; text-transform:uppercase; }
+  .dread { font-size:13px; line-height:1.5; }
+  .dread .verdict { font-weight:700; color:var(--pink); }
+  .path { display:flex; align-items:center; gap:4px; }
+  .pstep { flex:1; text-align:center; }
+  .pstep .pdot { width:8px; height:8px; border-radius:50%; margin:0 auto 4px; }
+  .pstep .pk { font-size:10.5px; color:var(--muted); }
+  .pstep .pv { font-size:13px; font-weight:700; }
+  .parrow { color:#c9c9d0; font-size:11px; padding-bottom:14px; }
+  .adcopy { font-size:12.5px; line-height:1.55; white-space:pre-wrap; max-height:180px; overflow-y:auto; }
+  .adcopy-meta { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .adcopy-meta span { font-size:11px; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:2px 8px; color:#55555e; }
+  .mgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .mcell { background:var(--bg); border-radius:8px; padding:8px 10px; }
+  .mcell .mk { font-size:10px; color:var(--muted); letter-spacing:.04em; }
+  .mcell .mv { font-size:14px; font-weight:700; margin-top:2px; }
+  .rbars { display:flex; gap:6px; align-items:flex-end; height:70px; }
+  .rbar { flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:3px; height:100%; }
+  .rbar .fill { width:100%; background:linear-gradient(180deg,#f472b6,var(--pink)); border-radius:4px 4px 0 0; min-height:2px; }
+  .rbar .rlbl { font-size:9.5px; color:var(--muted); }
+  .btable { width:100%; border-collapse:collapse; font-size:11.5px; }
+  .btable th, .btable td { padding:4px 6px; text-align:left; border-top:1px solid var(--border); }
+  .btable th { color:var(--muted); font-weight:600; font-size:10.5px; border-top:none; }
+  .btable td.num, .btable th.num { text-align:right; }
+  .bwrap { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .bwrap .dsec { padding:10px 12px; }
+  .dspin { color:var(--muted); font-size:12px; }
+  .dspin::before { content:""; display:inline-block; width:12px; height:12px; border:2px solid var(--border); border-top-color:var(--pink); border-radius:50%; animation:sp .8s linear infinite; margin-right:7px; vertical-align:-2px; }
+  .footerbar { display:flex; justify-content:center; align-items:center; gap:14px; margin-top:20px; color:var(--muted); }
+  .msgbox { padding:40px; text-align:center; color:var(--muted); background:var(--card); border:1px dashed var(--border); border-radius:14px; }
+  .err { border-color:var(--red); color:var(--red); }
+  .spin { display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--pink); border-radius:50%; animation:sp 0.8s linear infinite; vertical-align:-3px; margin-right:8px; }
+  @keyframes sp { to { transform:rotate(360deg);} }
+  .note { font-size:11.5px; color:var(--muted); margin-top:10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="titlebar"><div class="trophy">🏆</div><h1>Top Creatives</h1><span style="font-size:10px;color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:99px;padding:2px 8px;">v5 · click an ad name for details</span></div>
+  <div class="subtitle">See what Meta scaled, understand why it worked, and turn the signal into your next creative.</div>
+
+  <div class="controls">
+    <select id="account"></select>
+    <span class="preset" data-days="14">Last 14 days</span>
+    <span class="preset" data-days="30">Last 30 days</span>
+    <span class="preset" data-days="90">Last 90 days</span>
+    <input type="date" id="since"> <span style="color:var(--muted)">→</span> <input type="date" id="until">
+    <button class="ctl primary" id="apply">Apply</button>
+    <span class="spacer" style="flex:1"></span>
+    <button class="ctl" id="openChrome" title="Opens the snapshot version with full thumbnails">Open in Chrome ↗</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="performance">Performance</button>
+      <button class="tab" data-tab="attention">Attention</button>
+      <button class="tab" data-tab="funnel">Funnel</button>
+    </div>
+    <select id="rank">
+      <option value="spend">Rank by Spend</option>
+      <option value="purchases">Rank by Purchases</option>
+      <option value="cpa">Rank by CPA (best first)</option>
+      <option value="roas">Rank by ROAS</option>
+      <option value="hook">Rank by Hook rate</option>
+      <option value="hold">Rank by Hold rate</option>
+      <option value="ctr">Rank by CTR (outbound)</option>
+    </select>
+    <div class="spacer"></div>
+    <div class="seg" id="typeFilter">
+      <button class="active" data-type="all">All</button>
+      <button data-type="video">Video</button>
+      <button data-type="static">Static</button>
+    </div>
+  </div>
+
+  <div class="read" id="readBar" style="display:none">
+    <div class="lead">
+      <div class="who">THE READ</div>
+      <div class="msg" id="readMsg"></div>
+      <div class="sub" id="readSub"></div>
+    </div>
+    <div class="kpi"><div class="lbl">SPEND</div><div class="val" id="kSpend">—</div></div>
+    <div class="kpi"><div class="lbl">PURCHASES</div><div class="val" id="kPurch">—</div></div>
+    <div class="kpi"><div class="lbl">BLENDED CPA</div><div class="val" id="kCpa">—</div></div>
+    <div class="kpi"><div class="lbl">BLENDED ROAS</div><div class="val" id="kRoas">—</div></div>
+    <div class="kpi"><div class="lbl">TOP AD SHARE</div><div class="val" id="kShare">—</div></div>
+  </div>
+
+  <div class="tagfilter-bar" id="tagFilterBar">
+    Filtering by tag: <span class="chip active-filter" id="activeTagChip"></span>
+    <button class="ctl" id="clearTag">Clear</button>
+  </div>
+
+  <details class="patterns" id="patterns" style="display:none">
+    <summary>Creative patterns — performance by tag</summary>
+    <div id="patternsBody"></div>
+  </details>
+
+  <div id="content"><div class="msgbox"><span class="spin"></span>Loading creative data from Meta…</div></div>
+  <div class="footerbar" id="footer" style="display:none">
+    <span id="showing"></span>
+    <button class="ctl" id="loadMore">Load 12 more</button>
+    <button class="ctl" id="showAll">Show all</button>
+  </div>
+  <div class="note">Click an ad's name for the full creative-details view. Purple tags are AI-classified; others are parsed from ad names. Click any tag to filter.</div>
+</div>
+
+<div class="dover" id="dover" style="display:none">
+  <div class="drawer">
+    <div class="dhead">
+      <div style="min-width:0">
+        <div class="dtitle" id="dTitle"></div>
+        <div class="dsub" id="dSub"></div>
+      </div>
+      <button class="ctl" id="dClose">✕ Close</button>
+    </div>
+    <div class="dbody" id="dBody"></div>
+  </div>
+</div>
+
+<script>
+// ---- ACCOUNT CONFIG — rewritten per account by agent 60 -------------------
+// ACCOUNTS: from ads_get_ad_accounts. First entry is the default. Mark any account with
+// is_ads_mcp_enabled:false as disabled — it reports queryable and is not.
+const ACCOUNTS = [
+  { id:"<AD_ACCOUNT_ID>", name:"<Account name>" },
+];
+// MCP: the Meta connector's server id. It differs per account — discover it at runtime
+// (ToolSearch "ads_get_ad_entities") and read the value between mcp__ and __ads_.
+const MCP = "<META_CONNECTOR_SERVER_ID>";
+// Used in the card tag and in the AI-tagging prompt. Keep BRAND_DESC to a short noun phrase —
+// it is what tells the classifier what the product actually is.
+const BRAND = "<brand>";
+const BRAND_DESC = "<what the product is, in a few words>";
+const REQ = "I would like to build this kind of dashboard for creative analysis";
+const FIELDS = ["id","name","status","creative_id","amount_spent","impressions",
+  "actions:omni_purchase","purchase_roas","cost_per_omni_purchase","outbound_clicks_ctr",
+  "omni_landing_page_view","video_play_actions","video_thruplay_watched_actions","video_p50_watched_actions"];
+
+const LS = {
+  get(k,d){ try{ const v=localStorage.getItem("cd_"+k); return v===null?d:v; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem("cd_"+k, v); }catch(e){} }
+};
+
+let state = {
+  // Defaults come from the audit run: the confirmed live account and the window that actually
+  // has spend (step 2 of creative-data-model). Do not ship a date range the account was dormant
+  // in — the dashboard renders empty and reads as broken.
+  account: LS.get("account", ACCOUNTS[0].id),
+  since:   LS.get("since","<AUDIT_WINDOW_START>"),
+  until:   LS.get("until","<AUDIT_WINDOW_END>"),
+  tab:     LS.get("tab","performance"),
+  rank:    LS.get("rank","spend"),
+  type:    "all",
+  visible: 12,
+  ads: [], creatives: {},
+  previews: {}, previewUrls: {}, previewQueue: new Set(), previewBusy: 0
+};
+
+const $ = id => document.getElementById(id);
+const fmt$  = n => n==null ? "—" : "$" + n.toLocaleString("en-US",{maximumFractionDigits: n>=1000?0:2});
+const fmtN  = n => n==null ? "—" : n.toLocaleString("en-US");
+const fmtP  = n => n==null ? "—" : n.toFixed(1) + "%";
+const fmtP2 = n => n==null ? "—" : n.toFixed(2) + "%";
+
+function parseNum(v){
+  if (v==null || v==="Not available" || v==="") return null;
+  const c = String(v).replace(/[$,% ]/g,"").replace(/USD/gi,"").replace(/,/g,"").trim();
+  const n = parseFloat(c);
+  return isNaN(n) ? null : n;
+}
+
+async function callTool(tool, args){
+  const r = await window.cowork.callMcpTool("mcp__"+MCP+"__"+tool, args);
+  if (r.isError) throw new Error(r.content && r.content[0] ? r.content[0].text : "Tool error");
+  return r.structuredContent ?? JSON.parse(r.content[0].text);
+}
+
+function normalizeAd(raw, idx){
+  const spend = parseNum(raw.amount_spent);
+  const imps = parseNum(raw.impressions);
+  const purch = parseNum(raw["actions:omni_purchase"]);
+  const lpv = parseNum(raw.omni_landing_page_view);
+  const hook3s = parseNum(raw["3_second_video_plays"]);
+  const thru = parseNum(raw.video_thruplay_watched_actions);
+  return {
+    id: raw.id, name: raw.name || "(unnamed ad)", status: raw.status,
+    creativeId: raw.creative_id,
+    spend, imps, purch,
+    cpa: parseNum(raw.cost_per_omni_purchase),
+    roas: parseNum(raw.purchase_roas),
+    ctr: parseNum(raw.outbound_clicks_ctr),
+    lpv,
+    lpvToPurchase: (lpv && purch!=null) ? purch/lpv*100 : null,
+    hookRate: (hook3s!=null && imps) ? hook3s/imps*100 : null,
+    holdRate: (thru!=null && imps) ? thru/imps*100 : null,
+    plays3s: hook3s, thruplays: thru,
+    isVideo: raw.video_play_actions!=null && raw.video_play_actions!=="Not available",
+    tags: ruleTags(raw.name || ""), aiTagged: false
+  };
+}
+
+// ---- creative tagging ----
+const AWARENESS = { L1:"L1 · Unaware", L2:"L2 · Problem-aware", L3:"L3 · Solution-aware", L4:"L4 · Product-aware", L5:"L5 · Most aware" };
+const ANGLES = [
+  [/(^|_)MENO(_|-)|menopause/i, "Menopause"],
+  [/(^|_)YOYO|yo-?yo|not-another-diet/i, "Yo-yo dieting"],
+  [/ozempic|glp-?1|off all medications|medication/i, "GLP-1 / meds"],
+  [/(^|_)WL(_|-)|weight-?loss/i, "Weight loss"],
+  [/stop.?count|calorie/i, "Stop counting calories"],
+  [/metabol|flex|fuel|carbs?.?or.?fats?/i, "Metabolism"],
+  [/newyear|new-year|holiday|sale|blackfriday|bfcm|december|seasonal/i, "Seasonal / sale"],
+];
+const FORMATS = [
+  [/ugc/i, "UGC"],
+  [/mashup|montage/i, "Mashup"],
+  [/carousel/i, "Carousel"],
+  [/testimonial/i, "Testimonial"],
+  [/founder|talking.?head/i, "Talking head"],
+  [/vsl/i, "VSL"],
+  [/graph|static|image|1x1|4x5|9x16/i, "Static"],
+  [/video/i, "Video"],
+];
+const THEMES = [
+  [/remarketing|rtg|retarget/i, "Remarketing"],
+  [/quiz/i, "Quiz funnel"],
+  [/(^|_)shop(_|$)/i, "Shop dest."],
+  [/(^|_)hp(_|$)/i, "HP dest."],
+  [/offer|sale|% ?off|discount/i, "Offer-led"],
+  [/benefit/i, "Benefit-led"],
+  [/authority|expert|doctor|dietitian/i, "Authority"],
+  [/social.?proof/i, "Social proof"],
+  [/curiosity/i, "Curiosity gap"],
+  [/contrarian/i, "Contrarian"],
+];
+function ruleTags(name){
+  const tags = [];
+  const lvl = name.match(/(^|_)(L[1-5])(_|$|-)/i);
+  if (lvl) tags.push({ t: AWARENESS[lvl[2].toUpperCase()] || lvl[2].toUpperCase(), cls:"lvl" });
+  for (const [re, label] of ANGLES){ if (re.test(name)){ tags.push({ t: label, cls:"" }); break; } }
+  for (const [re, label] of FORMATS){ if (re.test(name)){ tags.push({ t: label, cls:"" }); break; } }
+  for (const [re, label] of THEMES){ if (re.test(name)){ tags.push({ t: label, cls:"" }); } }
+  const aud = name.match(/(^|_)([WMU])_?(\d{2})-(\d{2})(_|$)/i);
+  if (aud) tags.push({ t: (aud[2].toUpperCase()==="W"?"Women ":aud[2].toUpperCase()==="M"?"Men ":"") + aud[3] + "–" + aud[4], cls:"" });
+  return tags.slice(0,5);
+}
+function tagCacheGet(id){ try{ const v = localStorage.getItem("cd_aitag_"+id); return v?JSON.parse(v):null; }catch(e){ return null; } }
+function tagCacheSet(id, tags){ try{ localStorage.setItem("cd_aitag_"+id, JSON.stringify(tags)); }catch(e){} }
+
+async function aiTagAds(){
+  if (!window.cowork || !window.cowork.askClaude) return;
+  // Ads whose rule tags are thin (<2 tags) and not already AI-tagged
+  const need = state.ads.filter(a => a.tags.length < 2 && !a.aiTagged && !tagCacheGet(a.id)).slice(0, 40);
+  // apply cached AI tags first
+  state.ads.forEach(a => {
+    const c = tagCacheGet(a.id);
+    if (c && !a.aiTagged){ a.tags = a.tags.concat(c.map(t=>({t, cls:"ai"}))).slice(0,5); a.aiTagged = true; }
+  });
+  if (!need.length){ render(); return; }
+  try {
+    const payload = need.map(a => ({ id: a.id, name: a.name }));
+    const prompt = "You are classifying Meta ad creatives for " + BRAND + " (" + BRAND_DESC + ") using ONLY their ad names. " +
+      "For each ad, infer 1-3 short tags describing: the creative angle or hook theme, and the format if evident (UGC, Static, Video, Carousel). Use the account's own angle vocabulary where the name suggests one. If a name carries no signal, return an empty array for that ad rather than guessing. " +
+      "Respond with ONLY a JSON object mapping each ad id to an array of tag strings, no other text. Example: {\"123\":[\"Menopause\",\"UGC\"]}";
+    const resp = await window.cowork.askClaude(prompt, [JSON.stringify(payload)]);
+    const text = typeof resp === "string" ? resp : (resp && (resp.text || resp.content)) || "";
+    const m = String(text).match(/\{[\s\S]*\}/);
+    if (m){
+      const map = JSON.parse(m[0]);
+      state.ads.forEach(a => {
+        if (map[a.id] && Array.isArray(map[a.id])){
+          const clean = map[a.id].map(String).slice(0,3);
+          tagCacheSet(a.id, clean);
+          a.tags = a.tags.concat(clean.map(t=>({t, cls:"ai"}))).slice(0,5);
+          a.aiTagged = true;
+        }
+      });
+    }
+    render();
+  } catch(e){ console.warn("AI tagging skipped:", e); }
+}
+
+async function loadData(){
+  $("content").innerHTML = '<div class="msgbox"><span class="spin"></span>Loading creative data from Meta…</div>';
+  $("footer").style.display = "none";
+  $("readBar").style.display = "none";
+  try {
+    const data = await callTool("ads_get_ad_entities", {
+      ad_account_id: state.account,
+      level: "ad",
+      time_range: JSON.stringify({ since: state.since, until: state.until }),
+      fields: FIELDS,
+      sort: "amount_spent_descending",
+      limit: 100,
+      advertiser_request: REQ
+    });
+    let rows = typeof data.ad_entities === "string" ? JSON.parse(data.ad_entities) : (data.ad_entities || []);
+    state.ads = rows.map(normalizeAd).filter(a => (a.spend||0) > 0 || (a.imps||0) > 0);
+    state.visible = 12;
+    state.tagFilter = null;
+    render();
+    fetchThumbnails();
+    aiTagAds();
+  } catch(e) {
+    console.error("loadData failed", e);
+    $("content").innerHTML = '<div class="msgbox err">Could not load data: ' + escapeHtml(e.message||String(e)) +
+      '<br><br>Try the Reload button in the header, a different date range, or another account.</div>';
+  }
+}
+
+// ---- creative preview images (returned inline by Meta as base64 — works in the sandbox) ----
+async function callToolRaw(tool, args){
+  return window.cowork.callMcpTool("mcp__"+MCP+"__"+tool, args);
+}
+function ensurePreviews(shown){
+  shown.forEach(ad=>{
+    if (!ad.creativeId || state.previews[ad.creativeId]!==undefined || state.previewQueue.has(ad.creativeId)) return;
+    state.previewQueue.add(ad.creativeId);
+  });
+  pumpPreviews();
+}
+function pumpPreviews(){
+  while (state.previewBusy < 2 && state.previewQueue.size){
+    const cid = state.previewQueue.values().next().value;
+    state.previewQueue.delete(cid);
+    state.previewBusy++;
+    (async ()=>{
+      try{
+        const r = await callToolRaw("ads_get_ad_preview", { creative_id: cid, ad_format:"MOBILE_FEED_STANDARD", advertiser_request: REQ });
+        if (!window.__previewShapeLogged){
+          window.__previewShapeLogged = true;
+          try { console.log("PREVIEW RESULT SHAPE:", JSON.stringify({
+            topKeys: Object.keys(r||{}),
+            contentItems: ((r&&r.content)||[]).map(c=>({ type:c.type, keys:Object.keys(c), dataLen: c.data?String(c.data).length : (c.source&&c.source.data?String(c.source.data).length:0) }))
+          })); } catch(e){ console.log("shape log failed", e); }
+        }
+        let dataUrl = null, purl = null;
+        ((r && r.content) || []).forEach(c=>{
+          if (c.type==="image"){
+            const b64 = c.data || (c.source && c.source.data);
+            const mime = c.mimeType || c.mime_type || (c.source && c.source.media_type) || "image/jpeg";
+            if (b64) dataUrl = "data:" + mime + ";base64," + b64;
+          }
+          if (!purl && c.type==="text" && c.text){
+            try { const j = JSON.parse(c.text); if (j.preview_url) purl = j.preview_url; } catch(e){}
+          }
+        });
+        if (!purl && r && r.structuredContent && r.structuredContent.preview_url) purl = r.structuredContent.preview_url;
+        if (purl) state.previewUrls[cid] = purl.replace(/&amp;/g, "&");
+        state.previews[cid] = dataUrl;
+        applyPreview(cid);
+      } catch(e){ state.previews[cid] = null; applyPreview(cid); }
+      finally { state.previewBusy--; pumpPreviews(); }
+    })();
+  }
+}
+function applyPreview(cid){
+  const dataUrl = state.previews[cid];
+  document.querySelectorAll('.thumb[data-cid="'+cid+'"]').forEach(t=>{
+    const sp = t.querySelector(".loadingp"); if (sp) sp.remove();
+    if (dataUrl){
+      let img = t.querySelector("img");
+      if (!img){
+        img = document.createElement("img");
+        t.insertBefore(img, t.querySelector(".brand-tag"));
+      }
+      img.onerror = null;
+      img.src = dataUrl;
+    }
+  });
+  const purl = state.previewUrls[cid];
+  if (purl){
+    document.querySelectorAll('.actions[data-cid="'+cid+'"]').forEach(a=>{
+      if (a.querySelector(".pv")) return;
+      const link = document.createElement("a");
+      link.className = "abtn pv"; link.target = "_blank"; link.rel = "noopener";
+      link.href = purl; link.textContent = "Preview ↗";
+      a.appendChild(link);
+    });
+  }
+}
+
+async function fetchThumbnails(){
+  const ids = [...new Set(state.ads.map(a=>a.creativeId).filter(Boolean))].slice(0,100);
+  if (!ids.length) return;
+  try {
+    const data = await callTool("ads_get_creatives", {
+      ad_account_id: state.account,
+      creative_ids: ids,
+      fields: ["id","object_type","thumbnail_url","image_url"],
+      advertiser_request: REQ
+    });
+    const list = data.ad_creatives || [];
+    list.forEach(c => { state.creatives[c.id] = { url: c.image_url || c.thumbnail_url || null, type: c.object_type }; });
+    render();
+  } catch(e){ console.warn("thumbnail fetch failed", e); }
+}
+
+function filteredSorted(){
+  let ads = state.ads.slice();
+  if (state.type==="video") ads = ads.filter(a=>a.isVideo);
+  if (state.type==="static") ads = ads.filter(a=>!a.isVideo);
+  if (state.tagFilter) ads = ads.filter(a=>a.tags.some(t=>t.t===state.tagFilter));
+  const key = state.rank;
+  ads.sort((a,b)=>{
+    const av=a[metricKey(key)], bv=b[metricKey(key)];
+    if (av==null && bv==null) return 0;
+    if (av==null) return 1;
+    if (bv==null) return -1;
+    return key==="cpa" ? av-bv : bv-av;
+  });
+  return ads;
+}
+function metricKey(k){ return {spend:"spend",purchases:"purch",cpa:"cpa",roas:"roas",hook:"hookRate",hold:"holdRate",ctr:"ctr"}[k]; }
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+
+function metricsFor(ad){
+  if (state.tab==="performance") return [
+    ["Spend", fmt$(ad.spend), ""],
+    ["Purchases", fmtN(ad.purch), ""],
+    ["CPA", fmt$(ad.cpa), ad.cpa!=null?"neg":""],
+    ["ROAS", ad.roas==null?"—":ad.roas.toFixed(2), ad.roas!=null?(ad.roas>=1?"pos":"neg"):""]
+  ];
+  if (state.tab==="attention") return [
+    ["Hook rate", fmtP(ad.hookRate), ""],
+    ["Hold rate", fmtP(ad.holdRate), ""],
+    ["3s plays", fmtN(ad.plays3s), ""],
+    ["ThruPlays", fmtN(ad.thruplays), ""]
+  ];
+  return [
+    ["CTR (outbound)", fmtP2(ad.ctr), ""],
+    ["Landing page views", fmtN(ad.lpv), ""],
+    ["LPV → purchase", fmtP2(ad.lpvToPurchase), ""],
+    ["Impressions", fmtN(ad.imps), ""]
+  ];
+}
+
+function render(){
+  // summary
+  const all = state.ads;
+  if (all.length){
+    const tSpend = all.reduce((s,a)=>s+(a.spend||0),0);
+    const tPurch = all.reduce((s,a)=>s+(a.purch||0),0);
+    const tRev = all.reduce((s,a)=>s+((a.roas||0)*(a.spend||0)),0);
+    const top = all.reduce((m,a)=>(a.spend||0)>(m.spend||0)?a:m, all[0]);
+    $("kSpend").textContent = fmt$(tSpend);
+    $("kPurch").textContent = fmtN(tPurch);
+    $("kCpa").textContent = tPurch ? fmt$(tSpend/tPurch) : "—";
+    $("kRoas").textContent = tSpend ? (tRev/tSpend).toFixed(2) : "—";
+    $("kShare").textContent = tSpend ? Math.round((top.spend||0)/tSpend*100)+"%" : "—";
+    $("readMsg").textContent = "Meta put " + fmt$(tSpend) + " behind " + all.length + " ads from " + state.since + " to " + state.until + ".";
+    $("readSub").textContent = top ? ("Top spender: " + top.name.slice(0,80) + " took " + Math.round((top.spend||0)/tSpend*100) + "% of spend.") : "";
+    $("readBar").style.display = "flex";
+  }
+
+  const ads = filteredSorted();
+  if (!ads.length){
+    $("content").innerHTML = '<div class="msgbox">No ads with delivery in this window.<br><br>This account may not have spend in the selected range \u2014 try widening the dates or switching accounts. Note that an account can report is_queryable:true and still be un-queryable when is_ads_mcp_enabled is false.'t enabled for MCP access yet.)</div>';
+    $("footer").style.display = "none";
+    return;
+  }
+  const shown = ads.slice(0, state.visible);
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  shown.forEach((ad, i)=>{
+    const cr = state.creatives[ad.creativeId] || {};
+    const m = metricsFor(ad);
+    const card = document.createElement("div");
+    card.className = "card";
+    const pv = state.previews[ad.creativeId];
+    card.innerHTML =
+      '<div class="thumb" data-cid="' + escapeHtml(ad.creativeId||"") + '">' +
+        '<div class="fallback"><div class="big">' + (ad.isVideo?"▶":"🖼") + '</div><div class="nm">' + escapeHtml(ad.name.slice(0,90)) + '</div></div>' +
+        (pv ? '<img src="' + pv + '">' :
+          (cr.url ? '<img loading="lazy" src="' + escapeHtml(cr.url) + '" onerror="this.remove()">' : "")) +
+        (pv===undefined && ad.creativeId ? '<span class="loadingp"></span>' : "") +
+        '<span class="brand-tag">' + BRAND + '</span>' +
+        '<span class="badge">' + (ad.isVideo?"Video":"Static") + '</span>' +
+        '<span class="rankn">#' + (i+1) + '</span>' +
+      '</div>' +
+      '<div class="cbody">' +
+        '<div class="cname" data-adid="' + escapeHtml(ad.id) + '" title="Click for creative details">' + escapeHtml(ad.name) + '</div>' +
+        m.map(([k,v,cls])=>'<div class="mrow"><span class="k">'+k+'</span><span class="v '+cls+'">'+v+'</span></div>').join("") +
+        '<div class="chips">' + ad.tags.map(t=>'<span class="chip '+t.cls+'" data-tag="'+escapeHtml(t.t)+'" title="Click to filter">'+escapeHtml(t.t)+'</span>').join("") + '</div>' +
+        '<div class="status-line"><span class="dot" style="background:' + (ad.status==="ACTIVE"?"var(--green)":"#c2c2ca") + '"></span><span class="st">' + escapeHtml(ad.status||"") + '</span></div>' +
+        '<div class="actions" data-cid="' + escapeHtml(ad.creativeId||"") + '"><a class="abtn" target="_blank" rel="noopener" href="https://adsmanager.facebook.com/adsmanager/manage/ads?act=' + encodeURIComponent(state.account) + '&selected_ad_ids=' + encodeURIComponent(ad.id) + '">Ads Manager ↗</a>' +
+        (state.previewUrls[ad.creativeId] ? '<a class="abtn pv" target="_blank" rel="noopener" href="' + escapeHtml(state.previewUrls[ad.creativeId]) + '">Preview ↗</a>' : "") + '</div>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+  $("content").innerHTML = "";
+  $("content").appendChild(grid);
+  grid.querySelectorAll(".chip[data-tag]").forEach(c=>{
+    c.onclick = ()=>{ state.tagFilter = c.dataset.tag; state.visible = 12; render(); };
+  });
+  ensurePreviews(shown);
+  $("tagFilterBar").style.display = state.tagFilter ? "flex" : "none";
+  if (state.tagFilter) $("activeTagChip").textContent = state.tagFilter;
+  renderPatterns();
+  $("footer").style.display = "flex";
+  $("showing").textContent = "Showing " + shown.length + " of " + ads.length;
+  $("loadMore").style.display = shown.length < ads.length ? "" : "none";
+  $("showAll").style.display = shown.length < ads.length ? "" : "none";
+}
+
+function renderPatterns(){
+  const byTag = {};
+  state.ads.forEach(a=>{
+    a.tags.forEach(({t})=>{
+      if (!byTag[t]) byTag[t] = { spend:0, purch:0, ads:0, revenue:0 };
+      byTag[t].spend += a.spend||0; byTag[t].purch += a.purch||0;
+      byTag[t].revenue += (a.roas||0)*(a.spend||0); byTag[t].ads++;
+    });
+  });
+  const rows = Object.entries(byTag)
+    .filter(([,v])=>v.spend>0)
+    .sort((a,b)=>b[1].spend-a[1].spend)
+    .slice(0,12);
+  if (!rows.length){ $("patterns").style.display="none"; return; }
+  $("patterns").style.display = "";
+  $("patternsBody").innerHTML =
+    '<table><tr><th>Tag</th><th class="num">Ads</th><th class="num">Spend</th><th class="num">Purchases</th><th class="num">CPA</th><th class="num">ROAS</th></tr>' +
+    rows.map(([t,v])=>'<tr><td><span class="chip" data-tag="'+escapeHtml(t)+'">'+escapeHtml(t)+'</span></td>' +
+      '<td class="num">'+v.ads+'</td><td class="num">'+fmt$(v.spend)+'</td><td class="num">'+fmtN(v.purch)+'</td>' +
+      '<td class="num">'+(v.purch?fmt$(v.spend/v.purch):"—")+'</td>' +
+      '<td class="num">'+(v.spend?(v.revenue/v.spend).toFixed(2):"—")+'</td></tr>').join("") +
+    '</table>';
+  $("patternsBody").querySelectorAll(".chip[data-tag]").forEach(c=>{
+    c.onclick = ()=>{ state.tagFilter = c.dataset.tag; state.visible = 12; render(); window.scrollTo({top:0,behavior:"smooth"}); };
+  });
+}
+
+// ---- creative details drawer ----
+const detailCache = {};
+function detailKey(ad){ return ad.id + "|" + state.since + "|" + state.until; }
+
+// ---- LANDING PAGE GENOMES — rewritten per account by agent 60 --------------
+// One entry per destination the ads point at. Derived in section 20 by actually fetching the
+// pages, not from memory. Each summary records: hero claim, trust elements, section order,
+// offer, CTAs. These ground the promise-handoff score — "did the page keep the ad's promise" —
+// so a stale summary produces a confidently wrong score. Re-capture them every run.
+const LP_GENOMES = {
+  home: { url:"<domain>",           summary:"<Hero claim. Trust strip. Section order. Offer. CTAs.>" },
+  quiz: { url:"<domain>/<quiz>",    summary:"<As above, or delete this key if the account has no quiz funnel.>" },
+  shop: { url:"<domain>/<shop>",    summary:"<As above.>" },
+};
+function destFor(ad, creative){
+  const link = ((creative && creative.link_url) || "").toLowerCase();
+  const n = (ad.name||"").toLowerCase();
+  if (link.includes("quiz") || n.includes("quiz")) return "quiz";
+  if (link.includes("shop") || /(^|_)shop(_|$| )/.test(n)) return "shop";
+  return "home";
+}
+function median(arr){
+  const v = arr.filter(x=>x!=null && isFinite(x)).sort((a,b)=>a-b);
+  if (!v.length) return null;
+  const m = Math.floor(v.length/2);
+  return v.length%2 ? v[m] : (v[m-1]+v[m])/2;
+}
+function getBench(){
+  if (state._bench && state._bench.n === state.ads.length) return state._bench;
+  state._bench = {
+    n: state.ads.length,
+    hook: median(state.ads.map(a=>a.hookRate)),
+    hold: median(state.ads.map(a=>a.holdRate)),
+    ctr: median(state.ads.map(a=>a.ctr)),
+    l2p: median(state.ads.map(a=>a.lpvToPurchase)),
+    cpa: median(state.ads.map(a=>a.cpa))
+  };
+  return state._bench;
+}
+
+function pathColor(v, good, weak){
+  if (v==null) return "#c2c2ca";
+  return v>=good ? "var(--green)" : (v>=weak ? "#e5a50a" : "var(--red)");
+}
+
+function openDetails(ad){
+  $("dover").style.display = "flex";
+  $("dTitle").textContent = ad.name;
+  $("dSub").textContent = (ad.isVideo?"Video":"Static") + " · " + state.since + " → " + state.until + " · " + (ad.status||"");
+  renderDrawer(ad);
+  const key = detailKey(ad);
+  if (!detailCache[key]) {
+    detailCache[key] = { loading:true };
+    fetchDetails(ad, key);
+  }
+}
+
+function renderDrawer(ad){
+  const d = detailCache[detailKey(ad)] || {};
+  const cr = d.creative || {};
+  const rev = (ad.roas||0)*(ad.spend||0);
+  const cpm = (ad.spend && ad.imps) ? ad.spend/ad.imps*1000 : null;
+  const aov = (rev && ad.purch) ? rev/ad.purch : null;
+  const B = getBench();
+  const rel = (v, m)=> (v==null||m==null) ? "" : '<div class="pk" style="font-size:9.5px">acct med ' + (m>=10?m.toFixed(0):m.toFixed(1)) + '%</div>';
+  const steps = [
+    ["Hook", ad.hookRate, fmtP(ad.hookRate), pathColor(ad.hookRate, (B.hook||30), (B.hook||30)*0.66), rel(ad.hookRate,B.hook)],
+    ["Hold", ad.holdRate, fmtP(ad.holdRate), pathColor(ad.holdRate, (B.hold||12), (B.hold||12)*0.6), rel(ad.holdRate,B.hold)],
+    ["Click", ad.ctr, fmtP2(ad.ctr), pathColor(ad.ctr, (B.ctr||1.5), (B.ctr||1.5)*0.6), rel(ad.ctr,B.ctr)],
+    ["LPV→buy", ad.lpvToPurchase, fmtP2(ad.lpvToPurchase), pathColor(ad.lpvToPurchase, (B.l2p||1.2), (B.l2p||1.2)*0.5), rel(ad.lpvToPurchase,B.l2p)]
+  ];
+  let html = "";
+  // AI read (structured)
+  const r = d.read;
+  html += '<div class="dsec"><h3>The read</h3><div class="dread" id="dRead">';
+  if (!r) html += '<span class="dspin">Reading the numbers, copy, and landing page…</span>';
+  else if (typeof r === "string") html += escapeHtml(r);
+  else {
+    html += '<div class="verdict" style="font-size:14px">' + escapeHtml(r.verdict||"") + '</div>' +
+      (r.what_worked ? '<div style="margin-top:7px"><b>What worked:</b> ' + escapeHtml(r.what_worked) + '</div>' : "") +
+      (r.where_it_broke ? '<div style="margin-top:5px"><b>Where it broke:</b> ' + escapeHtml(r.where_it_broke) + '</div>' : "") +
+      (r.next_move ? '<div style="margin-top:5px;color:var(--pink)"><b>Next move:</b> ' + escapeHtml(r.next_move) + '</div>' : "");
+  }
+  html += '</div></div>';
+  // Path
+  html += '<div class="dsec"><h3>Path — vs account median (' + B.n + ' ads, this window)</h3><div class="path">' +
+    steps.map((s,i)=> (i? '<div class="parrow">→</div>':'') +
+      '<div class="pstep"><div class="pdot" style="background:'+s[3]+'"></div><div class="pk">'+s[0]+'</div><div class="pv">'+s[2]+'</div>'+(s[4]||"")+'</div>').join("") +
+    '</div></div>';
+  // Promise handoff
+  const dest = LP_GENOMES[destFor(ad, cr)];
+  html += '<div class="dsec"><h3>Did the page keep the promise? · ' + escapeHtml(dest.url) + '</h3>';
+  if (!r || typeof r === "string") html += '<div class="dspin">Comparing ad promise to the landing page…</div>';
+  else {
+    const sc = r.handoff_score!=null ? Math.max(0,Math.min(100,Math.round(r.handoff_score))) : null;
+    html += (sc!=null ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">' +
+        '<div style="flex:1;height:6px;background:var(--bg);border-radius:99px;overflow:hidden"><div style="width:'+sc+'%;height:100%;background:'+(sc>=70?"var(--green)":sc>=45?"#e5a50a":"var(--red)")+'"></div></div>' +
+        '<b style="font-size:13px">'+sc+'/100</b></div>' : "") +
+      (r.handoff_verdict ? '<div style="font-weight:600;font-size:12.5px">' + escapeHtml(r.handoff_verdict) + '</div>' : "") +
+      (r.handoff_note ? '<div style="font-size:12px;color:#55555e;margin-top:4px">' + escapeHtml(r.handoff_note) + '</div>' : "");
+  }
+  html += '</div>';
+  // Copy
+  html += '<div class="dsec"><h3>Ad copy</h3>' +
+    (d.creative===undefined ? '<div class="dspin">Loading creative…</div>' :
+      '<div class="adcopy">' + escapeHtml(cr.body || "(no primary text on this creative)") + '</div>' +
+      '<div class="adcopy-meta">' +
+        (cr.title ? '<span>Headline: ' + escapeHtml(cr.title) + '</span>' : "") +
+        (cr.call_to_action_type ? '<span>CTA: ' + escapeHtml(cr.call_to_action_type) + '</span>' : "") +
+        (cr.link_url ? '<span>→ ' + escapeHtml(cr.link_url) + '</span>' : "") +
+        (cr.object_type ? '<span>' + escapeHtml(cr.object_type) + '</span>' : "") +
+      '</div>') + '</div>';
+  // Metrics
+  const cells = [
+    ["Spend", fmt$(ad.spend)], ["Purchases", fmtN(ad.purch)], ["CPA", fmt$(ad.cpa)],
+    ["ROAS", ad.roas==null?"—":ad.roas.toFixed(2)], ["Revenue", rev?fmt$(rev):"—"], ["AOV", aov?fmt$(aov):"—"],
+    ["Impressions", fmtN(ad.imps)], ["CPM", cpm?fmt$(cpm):"—"], ["CTR (outb.)", fmtP2(ad.ctr)],
+    ["LPVs", fmtN(ad.lpv)], ["3s plays", fmtN(ad.plays3s)], ["ThruPlays", fmtN(ad.thruplays)]
+  ];
+  html += '<div class="dsec"><h3>Performance</h3><div class="mgrid">' +
+    cells.map(c=>'<div class="mcell"><div class="mk">'+c[0]+'</div><div class="mv">'+c[1]+'</div></div>').join("") + '</div></div>';
+  // Video retention (quartiles)
+  if (d.detail && d.detail.q25!=null && ad.plays3s){
+    const base = ad.plays3s;
+    const bars = [["3s",base],["25%",d.detail.q25],["50%",d.detail.q50],["75%",d.detail.q75],["100%",d.detail.q100]];
+    html += '<div class="dsec"><h3>Video retention (of 3s viewers)</h3><div class="rbars">' +
+      bars.map(b=>'<div class="rbar"><div class="fill" style="height:'+Math.max(2, Math.round((b[1]||0)/base*100))+'%"></div><div class="rlbl">'+b[0]+'<br>'+(b[1]!=null?Math.round((b[1]||0)/base*100)+"%":"—")+'</div></div>').join("") +
+      '</div></div>';
+  }
+  // Breakdowns
+  html += '<div class="bwrap">' +
+    bdTable("Placement", d.bdPlatform) + bdTable("Device", d.bdDevice) +
+    bdTable("Age", d.bdAge) + bdTable("Gender", d.bdGender) + '</div>';
+  // Tags + actions
+  html += '<div class="dsec"><h3>Tags</h3><div class="chips">' +
+    ad.tags.map(t=>'<span class="chip '+t.cls+'">'+escapeHtml(t.t)+'</span>').join("") + '</div>' +
+    '<div class="actions" style="margin-top:10px">' +
+    '<a class="abtn" target="_blank" rel="noopener" href="https://adsmanager.facebook.com/adsmanager/manage/ads?act=' + encodeURIComponent(state.account) + '&selected_ad_ids=' + encodeURIComponent(ad.id) + '">Ads Manager ↗</a>' +
+    (state.previewUrls[ad.creativeId] ? '<a class="abtn" target="_blank" rel="noopener" href="' + escapeHtml(state.previewUrls[ad.creativeId]) + '">Preview ↗</a>' : "") +
+    '</div></div>';
+  $("dBody").innerHTML = html;
+}
+
+function bdTable(label, rows){
+  if (rows===undefined) return '<div class="dsec"><h3>'+label+'</h3><div class="dspin">Loading…</div></div>';
+  if (!rows || !rows.length) return '<div class="dsec"><h3>'+label+'</h3><div class="dspin" style="padding-left:0">No data</div></div>';
+  const tot = rows.reduce((s,r)=>s+(r.spend||0),0) || 1;
+  return '<div class="dsec"><h3>'+label+'</h3><table class="btable">' +
+    '<tr><th></th><th class="num">Spend</th><th class="num">%</th><th class="num">Purch.</th></tr>' +
+    rows.sort((a,b)=>(b.spend||0)-(a.spend||0)).slice(0,6).map(r=>
+      '<tr><td>'+escapeHtml(r.dim)+'</td><td class="num">'+fmt$(r.spend)+'</td><td class="num">'+Math.round((r.spend||0)/tot*100)+'%</td><td class="num">'+fmtN(r.purch)+'</td></tr>').join("") +
+    '</table></div>';
+}
+
+async function fetchDetails(ad, key){
+  const cache = detailCache[key];
+  const rerender = ()=>{ if ($("dover").style.display!=="none" && $("dTitle").textContent===ad.name) renderDrawer(ad); };
+  // creative copy → then AI read (needs the copy + landing page)
+  callTool("ads_get_creatives", { ad_account_id: state.account, creative_ids:[ad.creativeId],
+    fields:["id","body","title","call_to_action_type","link_url","object_type"], advertiser_request: REQ })
+    .then(d=>{ cache.creative = (d.ad_creatives && d.ad_creatives[0]) || {}; rerender(); runRead(ad, key, cache); })
+    .catch(()=>{ cache.creative = {}; rerender(); runRead(ad, key, cache); });
+  // quartiles
+  callTool("ads_get_ad_entities", { ad_account_id: state.account, level:"ad",
+    time_range: JSON.stringify({since:state.since, until:state.until}),
+    fields:["id","video_p25_watched_actions","video_p50_watched_actions","video_p75_watched_actions","video_p100_watched_actions"],
+    filtering:[{field:"ad.id",operator:"IN",value:[ad.id]}], advertiser_request: REQ })
+    .then(d=>{
+      const rows = typeof d.ad_entities==="string" ? JSON.parse(d.ad_entities) : (d.ad_entities||[]);
+      const r = rows[0]||{};
+      cache.detail = { q25:parseNum(r.video_p25_watched_actions), q50:parseNum(r.video_p50_watched_actions),
+        q75:parseNum(r.video_p75_watched_actions), q100:parseNum(r.video_p100_watched_actions) };
+      rerender();
+    }).catch(()=>{ cache.detail = {}; rerender(); });
+  // breakdowns
+  const bd = (dim, slot)=> callTool("ads_get_ad_entities", { ad_account_id: state.account, level:"ad",
+    time_range: JSON.stringify({since:state.since, until:state.until}),
+    fields:["id","amount_spent","impressions","actions:omni_purchase"],
+    filtering:[{field:"ad.id",operator:"IN",value:[ad.id]}], breakdowns:[dim], advertiser_request: REQ })
+    .then(d=>{
+      const rows = typeof d.ad_entities==="string" ? JSON.parse(d.ad_entities) : (d.ad_entities||[]);
+      cache[slot] = rows.map(r=>({ dim:r[dim]||"?", spend:parseNum(r.amount_spent), imps:parseNum(r.impressions), purch:parseNum(r["actions:omni_purchase"]) }))
+        .filter(r=>(r.spend||0)>0);
+      rerender();
+    }).catch(()=>{ cache[slot]=null; rerender(); });
+  bd("publisher_platform","bdPlatform"); bd("impression_device","bdDevice");
+  bd("age","bdAge"); bd("gender","bdGender");
+}
+
+function runRead(ad, key, cache){
+  if (cache.read || cache._readStarted) return;
+  cache._readStarted = true;
+  const rerender = ()=>{ if ($("dover").style.display!=="none" && $("dTitle").textContent===ad.name) renderDrawer(ad); };
+  if (!(window.cowork && window.cowork.askClaude)){ cache.read = "AI read unavailable in this view."; rerender(); return; }
+  const cachedRead = (()=>{ try{ const v = localStorage.getItem("cd_read2_"+key); return v?JSON.parse(v):null; }catch(e){ return null; } })();
+  if (cachedRead){ cache.read = cachedRead; rerender(); return; }
+  const B = getBench();
+  const dest = LP_GENOMES[destFor(ad, cache.creative)];
+  const payload = {
+    ad_name: ad.name,
+    ad_primary_text: (cache.creative && cache.creative.body) || "(not available)",
+    ad_headline: (cache.creative && cache.creative.title) || "",
+    ad_cta: (cache.creative && cache.creative.call_to_action_type) || "",
+    is_video: ad.isVideo, tags: ad.tags.map(t=>t.t),
+    metrics: { spend:ad.spend, purchases:ad.purch, cpa:ad.cpa, roas:ad.roas,
+      hook_rate_pct:ad.hookRate, hold_rate_pct:ad.holdRate, outbound_ctr_pct:ad.ctr,
+      landing_page_views:ad.lpv, lpv_to_purchase_pct:ad.lpvToPurchase, impressions:ad.imps },
+    account_medians_this_window: { hook_rate_pct:B.hook, hold_rate_pct:B.hold, outbound_ctr_pct:B.ctr, lpv_to_purchase_pct:B.l2p, cpa:B.cpa },
+    landing_page: dest
+  };
+  window.cowork.askClaude(
+    "You are a blunt, evidence-driven Meta ads creative analyst (think: a strategist writing a per-ad read for the growth team). You get one ad's copy, its funnel metrics, the account medians for the same window, and a summary of the landing page it points to. " +
+    "Respond with ONLY a JSON object, no other text, with these keys: " +
+    "verdict (one short sentence starting with Scale/Iterate/Stop/Too early + the core reason), " +
+    "what_worked (1-2 sentences, cite specific numbers vs the account medians), " +
+    "where_it_broke (1-2 sentences naming the weakest funnel step with numbers; if nothing broke say what's merely average), " +
+    "next_move (one concrete, specific action), " +
+    "handoff_score (0-100: does the landing page continue the ad's specific promise, angle, and next step?), " +
+    "handoff_verdict (short: e.g. 'Holds — page continues the metabolic-coach claim' or 'Breaks — ad promises X, page opens with Y'), " +
+    "handoff_note (1-2 sentences explaining the biggest continuity or break between the ad promise and the page opening).",
+    [JSON.stringify(payload)]
+  ).then(resp=>{
+    const text = typeof resp==="string" ? resp : (resp && (resp.text||resp.content)) || "";
+    let obj = null;
+    try { const m = String(text).match(/\{[\s\S]*\}/); if (m) obj = JSON.parse(m[0]); } catch(e){}
+    cache.read = obj || String(text).trim() || "AI read unavailable.";
+    if (obj){ try{ localStorage.setItem("cd_read2_"+key, JSON.stringify(obj)); }catch(e){} }
+    rerender();
+  }).catch(()=>{ cache.read = "AI read unavailable — check the path and breakdowns below."; rerender(); });
+}
+
+// ---- wiring ----
+function initControls(){
+  const sel = $("account");
+  ACCOUNTS.forEach(a=>{
+    const o = document.createElement("option");
+    o.value = a.id; o.textContent = a.name;
+    // An account can report is_queryable:true and still be un-queryable when Meta has not
+    // enabled it for MCP. Set mcpEnabled:false on those in ACCOUNTS so they show but cannot
+    // be selected — silently omitting them makes the list look wrong to whoever owns them.
+    if (a.mcpEnabled === false) o.disabled = true;
+    sel.appendChild(o);
+  });
+  sel.value = state.account;
+  $("since").value = state.since;
+  $("until").value = state.until;
+  document.querySelectorAll(".tab").forEach(t=>{
+    t.classList.toggle("active", t.dataset.tab===state.tab);
+    t.onclick = ()=>{ state.tab=t.dataset.tab; LS.set("tab",state.tab);
+      document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===t)); render(); };
+  });
+  $("rank").value = state.rank;
+  $("rank").onchange = e=>{ state.rank=e.target.value; LS.set("rank",state.rank); state.visible=12; render(); };
+  document.querySelectorAll("#typeFilter button").forEach(b=>{
+    b.onclick = ()=>{ state.type=b.dataset.type;
+      document.querySelectorAll("#typeFilter button").forEach(x=>x.classList.toggle("active",x===b));
+      state.visible=12; render(); };
+  });
+  document.querySelectorAll(".preset").forEach(p=>{
+    p.onclick = ()=>{
+      const d = parseInt(p.dataset.days,10);
+      const until = new Date(); until.setDate(until.getDate()-1);
+      const since = new Date(); since.setDate(since.getDate()-d);
+      $("since").value = since.toISOString().slice(0,10);
+      $("until").value = until.toISOString().slice(0,10);
+      document.querySelectorAll(".preset").forEach(x=>x.classList.toggle("active",x===p));
+      applyRange();
+    };
+  });
+  $("apply").onclick = applyRange;
+  sel.onchange = ()=>{ state.account = sel.value; LS.set("account",state.account); state.creatives={}; loadData(); };
+  $("clearTag").onclick = ()=>{ state.tagFilter = null; state.visible = 12; render(); };
+  // Card name click → details drawer (event delegation so it survives any re-render)
+  document.addEventListener("click", e=>{
+    const nm = e.target.closest ? e.target.closest(".cname") : null;
+    if (!nm || !nm.dataset.adid) return;
+    console.log("drilldown click:", nm.dataset.adid);
+    const ad = state.ads.find(a=>a.id===nm.dataset.adid);
+    if (ad) openDetails(ad);
+  });
+
+  const CHROME_FILE = "<path to top-creatives-chrome.html in this audit run>";
+  $("openChrome").onclick = ()=>{
+    const fileUrl = "file://" + encodeURI(CHROME_FILE);
+    const showPath = ()=>{
+      let box = document.getElementById("chromePathBox");
+      if (!box){
+        box = document.createElement("input");
+        box.id = "chromePathBox";
+        box.readOnly = true;
+        box.style.cssText = "width:100%;margin-top:8px;padding:7px 10px;border:1px solid var(--pink);border-radius:8px;font-size:11px;color:var(--text);background:var(--card);";
+        $("openChrome").parentElement.appendChild(box);
+      }
+      box.value = fileUrl;
+      box.style.display = "";
+      box.focus(); box.select();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(fileUrl).then(()=>{
+        $("openChrome").textContent = "Copied ✓ — paste in Chrome's address bar";
+        setTimeout(()=>{ $("openChrome").textContent = "Open in Chrome ↗"; }, 5000);
+      }).catch(showPath);
+    } else showPath();
+  };
+  $("dClose").onclick = ()=>{ $("dover").style.display = "none"; };
+  $("dover").onclick = e=>{ if (e.target === $("dover")) $("dover").style.display = "none"; };
+  document.addEventListener("keydown", e=>{ if (e.key==="Escape") $("dover").style.display = "none"; });
+  $("loadMore").onclick = ()=>{ state.visible+=12; render(); };
+  $("showAll").onclick = ()=>{ state.visible=1e9; render(); };
+}
+function applyRange(){
+  state.since = $("since").value; state.until = $("until").value;
+  LS.set("since",state.since); LS.set("until",state.until);
+  state.visible=12; loadData();
+}
+initControls();
+loadData();
+</script>
+</body>
+</html>

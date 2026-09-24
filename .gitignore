@@ -1,0 +1,40 @@
+# Audit run output — contains client account IDs, spend, order, creative and margin data.
+# Never commit this. Each run writes its own directory; prior runs are never overwritten.
+audits/
+
+# Execution-lane output — change plans, approvals, applied-change logs and rollback notes.
+# Contains live entity IDs and the record of what was mutated on a real ad account.
+changes/
+
+# Per-run orchestration state written by scripts/init-audit-run.sh. Same class as audits/:
+# run-state.json accumulates datasets, conflicts and opportunities as a run progresses.
+orchestration/runs/
+
+# Client product/positioning context written by the product-marketing skill.
+.agents/product-marketing.md
+.claude/product-marketing.md
+product-marketing-context.md
+
+# Credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+service-account*.json
+
+# Local Claude Code state
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Node (tools/clis are zero-dependency, but nothing stops a local install)
+node_modules/
+package-lock.json
+npm-debug.log*
