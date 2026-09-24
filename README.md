@@ -1,89 +1,78 @@
 # Meta Ads Ecommerce OS
 
-A Claude Code–native operating system for D2C e-commerce Meta ad accounts. It **audits**, and —
-under a separate, fenced protocol — it **executes**. 105 skills in three authority layers, a
-30-section audit framework, and a 93-tool connector registry.
+A Claude Code–native operating system for D2C e-commerce Meta ad accounts. It **audits** — 177
+agents and 105 skills across a 30-section framework — and, under a separate fenced protocol, it
+**executes**.
 
 The premise, inherited from its Google counterpart: most audits fail not because nobody looked at
 the account, but because they optimised numbers that were not true. So the run order is fixed —
 **reconcile, measure, price, then scale.** Measurement and economics are gates, not chapters.
 
-Three things make this different from
-[`undark-ai/Google-Ads-OS`](https://github.com/undark-ai/Google-Ads-OS), and they shape everything
-below.
-
-**Creative is the lever.** Google is `Demand → Search → Product → Purchase`. Meta is
-`Creative → Attention → Desire → Click → Product → Purchase → LTV`. A technically perfect account
-with mediocre creative still struggles, so four of the thirty sections are creative and the
-output is a **creative learning system** — which hook, angle, proof point, creator and offer win
-*purchases* — not a list of winning ads.
-
-**The connector can write.** The Google Ads MCP is read-only, so that system's safety story is
-"we have no hands". This one has hands. The boundary is therefore enforced rather than asserted:
-every one of the connector's 102 tools is classified read or write, audit agents may call only the
-61 reads, and `scripts/validate-execution-boundary.py` fails the build if one so much as
-references a write. Unclassified tools are treated as writes — fail closed.
-
-**Meta grades its own homework.** Modelled conversions, view-through attribution, Aggregated Event
-Measurement and the 7-day-click default mean Meta's reported figures are a *claim* until
-reconciled. A modelled value never carries the `OBSERVED` evidence class, and Meta's assertions
-about Meta — opportunity score, relevance rankings, EMQ — are `PLATFORM_STATED`: reportable,
-never proof.
-
 ---
 
-## Install
+## Quickstart
 
-**As a plugin:**
+### 1. Install
+
+**As a plugin** — two commands. The first registers the catalog, the second installs from it.
+Adding the marketplace alone installs nothing:
 
 ```
 /plugin marketplace add undark-ai/Meta-Ads-OS
+/plugin install meta-ads-os@meta-ads-os
 ```
 
-**By copying in** — clone into the project you want to audit. Claude Code discovers
-`.claude/agents/`, `.claude/skills/` and `.mcp.json` automatically.
+**By cloning** — clone into the project you want to audit. Claude Code discovers
+`.claude/agents/`, `.claude/skills/` and `.mcp.json` automatically:
 
-### What a full audit needs
-
-You do not have to work this out first. `audit-preflight` runs before anything and asks which of
-these to connect, saying what each one costs if you skip it. Connect nothing and the audit still
-runs — it records what it could not see.
-
-| Source | Standing | Without it |
-|---|---|---|
-| **Meta Ads connector** | Required | There is no audit |
-| **Commerce platform** — Shopify, WooCommerce | Required | Revenue truth. Every ROAS stays a platform claim; reconciliation and margin both collapse |
-| **GA4** or equivalent | Strongly recommended | The funnel's mid-stages, and the only neutral arbiter between two platforms that both over-claim |
-| **Other paid channels** — Google, TikTok | Strongly recommended **in practice** | Blended MER needs *total* ad spend. Two platforms routinely claim the same order; you cannot see that with one connected |
-| **Meta product catalog** | Required *if* catalog, DPA or Advantage+ Shopping runs | Feed quality, disapprovals, product diagnostics |
-| **Email/CRM** — Klaviyo, Attentive | Recommended | The LTV loop: whether first-party value flows *back* into Meta |
-
-### How Meta connects, and why `.mcp.json` does not ship a server
-
-Meta is reached through the account's **configured connector**, not a server pinned in this repo.
-Its MCP server id differs per account — tools arrive as
-`mcp__<SERVER_ID>__ads_get_ad_entities` — which is exactly why *discover tools before use* is a
-rule here rather than a convenience. Agents resolve the real prefixed names at runtime.
-
-`.mcp.json` ships only Semrush (HTTP, optional competitive context). It deliberately does **not**
-ship a self-hosted Meta server: third-party ones exist, but any server listed here executes
-locally holding this account's Meta credentials, and none has been audited. If you add one,
-**pin it to an immutable reference** — an unpinned spec re-resolves on every launch — or document
-why it cannot be pinned.
-
----
-
-## Run it
-
-```
-/full-audit          → or ask: "Run the full Meta Ads audit on my account."
+```bash
+git clone https://github.com/undark-ai/Meta-Ads-OS.git
 ```
 
-Preflight runs first and asks two questions before any data is pulled: do we know the business
-(is `.agents/product-marketing.md` current?), and can we see the data (which connectors are
-missing?). **Preflight offers; it never blocks.** "Proceed as-is" is always valid and is
+The route decides what the command is called, because plugin skills are namespaced and a clone's
+are not:
+
+| Installed as | Run a full audit with |
+|---|---|
+| Plugin | `/meta-ads-os:full-audit` |
+| Clone | `/full-audit` |
+
+Asking in plain language works either way — *"Run the full Meta Ads audit on my account."*
+
+### 2. Connect Meta
+
+The one hard requirement is a **Meta Ads MCP connector on the account you want to audit**. Without
+it there is no audit. Everything else is optional and degrades the run rather than stopping it —
+[what a full audit needs](#what-a-full-audit-needs) gives the cost of each gap.
+
+This repository deliberately does not ship a Meta server; see
+[how Meta connects](#how-meta-connects-and-why-mcpjson-does-not-ship-a-server) for why, and what
+to do if you add one.
+
+### 3. Optionally, write the business context file
+
+Preflight and several skills look for `.agents/product-marketing.md` — product, ICP, positioning,
+margins, offers. **It is yours to write.** Nothing ships it, and it is gitignored so it never
+leaves your machine. Skip it and the system asks those questions interactively instead; write it
+once and it stops asking.
+
+### 4. Run it
+
+Preflight runs before any data is pulled and asks two things: do we know the business, and can we
+see the data. **Preflight offers; it never blocks.** "Proceed as-is" is always valid and is
 recorded, so a section that later closes `BLOCKED` reads as an accepted trade rather than an
 oversight.
+
+Then it sweeps. A full audit is one top-to-bottom pass over all 30 sections — long by design,
+because it queries every section rather than stopping at the first missing input. On an
+unfamiliar account the cheaper opening move is the foundational audit, which answers only *is
+this account measurable, and is it economically viable?* — ask for it by name, or point Claude at
+[`workflows/01-foundational-audit.md`](workflows/01-foundational-audit.md).
+
+**An audit never touches your account.** Applying changes is a separate lane, entered
+deliberately, with its own protocol and its own approvals.
+
+### What you get
 
 Output lands in `audits/<run-id>/`, one directory per run, never overwritten:
 
@@ -102,6 +91,62 @@ executive-summary.md    the decision page
 
 Narrower sequences live in `workflows/` — foundational audit, creative deep dive, weekly and
 monthly cycles, scale decision, peak planning, execution run, quality control, executive review.
+
+---
+
+## What a full audit needs
+
+You do not have to work this out first. `audit-preflight` runs before anything and asks which of
+these to connect, saying what each one costs if you skip it. Connect nothing beyond Meta and the
+audit still runs — it records what it could not see.
+
+| Source | Standing | Without it |
+|---|---|---|
+| **Meta Ads connector** | Required | There is no audit |
+| **Commerce platform** — Shopify, WooCommerce | Required | Revenue truth. Every ROAS stays a platform claim; reconciliation and margin both collapse |
+| **GA4** or equivalent | Strongly recommended | The funnel's mid-stages, and the only neutral arbiter between two platforms that both over-claim |
+| **Other paid channels** — Google, TikTok | Strongly recommended **in practice** | Blended MER needs *total* ad spend. Two platforms routinely claim the same order; you cannot see that with one connected |
+| **Meta product catalog** | Required *if* catalog, DPA or Advantage+ Shopping runs | Feed quality, disapprovals, product diagnostics |
+| **Email/CRM** — Klaviyo, Attentive | Recommended | The LTV loop: whether first-party value flows *back* into Meta |
+
+## How Meta connects, and why `.mcp.json` does not ship a server
+
+Meta is reached through the account's **configured connector**, not a server pinned in this repo.
+Its MCP server id differs per account — tools arrive as
+`mcp__<SERVER_ID>__ads_get_ad_entities` — which is exactly why *discover tools before use* is a
+rule here rather than a convenience. Agents resolve the real prefixed names at runtime.
+
+`.mcp.json` ships only Semrush (HTTP, optional competitive context). It deliberately does **not**
+ship a self-hosted Meta server: third-party ones exist, but any server listed here executes
+locally holding this account's Meta credentials, and none has been audited. If you add one,
+**pin it to an immutable reference** — an unpinned spec re-resolves on every launch — or document
+why it cannot be pinned.
+
+---
+
+## What makes this different
+
+Three things separate this from
+[`undark-ai/Google-Ads-OS`](https://github.com/undark-ai/Google-Ads-OS), and they shape everything
+below.
+
+**Creative is the lever.** Google is `Demand → Search → Product → Purchase`. Meta is
+`Creative → Attention → Desire → Click → Product → Purchase → LTV`. A technically perfect account
+with mediocre creative still struggles, so four of the thirty sections are creative and the
+output is a **creative learning system** — which hook, angle, proof point, creator and offer win
+*purchases* — not a list of winning ads.
+
+**The connector can write.** The Google Ads MCP is read-only, so that system's safety story is
+"we have no hands". This one has hands. The boundary is therefore enforced rather than asserted:
+every one of the Meta connector's 102 tools is classified read or write, audit agents may call
+only the 61 reads, and `scripts/validate-execution-boundary.py` fails the build if one so much as
+references a write. Unclassified tools are treated as writes — fail closed.
+
+**Meta grades its own homework.** Modelled conversions, view-through attribution, Aggregated Event
+Measurement and the 7-day-click default mean Meta's reported figures are a *claim* until
+reconciled. A modelled value never carries the `OBSERVED` evidence class, and Meta's assertions
+about Meta — opportunity score, relevance rankings, EMQ — are `PLATFORM_STATED`: reportable,
+never proof.
 
 ---
 
@@ -212,7 +257,7 @@ schemas/             12 files       ← contracts: finding, opportunity, reconci
 orchestration/        5 files       ← orchestrator, execution engine, data registry, manifest
 workflows/           10 files       ← named sequences
 templates/            5 files       ← finding, executive summary, change register, brief
-scripts/              5 files       ← validators (run before committing)
+scripts/              9 files       ← 8 validators + the run initialiser (run before committing)
 CLAUDE.md                           ← the operating rules. Read this first.
 EXECUTION-PROTOCOL.md               ← the mutation contract
 AGENT-INDEX.md · SKILL-INDEX.md     ← the libraries and their bands/layers
@@ -220,9 +265,9 @@ AUTHORING.md                        ← how to add an agent or a skill
 ATTRIBUTION.md · FIELD-NOTES.md     ← provenance; and defects found in live runs
 ```
 
-Phase 1 ships the framework and the skill library. The agent bands (07–162) and the execution
-agents (200+) land in phases 2 and 3 — `AGENT-INDEX.md` holds the map, and every agent must be
-mapped to one of the 30 sections or it will never run.
+Every agent must be mapped to one of the 30 sections or it will never run; `AGENT-INDEX.md`
+holds that map, and `scripts/validate-section-map.py` checks it against the agents' own
+frontmatter on every push.
 
 ---
 
