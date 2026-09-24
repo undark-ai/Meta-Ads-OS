@@ -19,9 +19,9 @@
   "agents_planned": 162,
   "skills": 105,
   "entry_points": {
-    "orchestrator": ".claude/agents/01-full-account-audit-agent.md",
+    "orchestrator": "agents/01-full-account-audit-agent.md",
     "skill": ".claude/skills/full-audit/SKILL.md",
-    "preflight": ".claude/agents/02-audit-preflight-agent.md",
+    "preflight": "agents/02-audit-preflight-agent.md",
     "execution": "workflows/08-execution-run.md",
     "context": ".claude/skills/product-marketing/SKILL.md"
   },

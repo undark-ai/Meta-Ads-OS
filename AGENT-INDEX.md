@@ -63,13 +63,13 @@ measurement is what everything else is judged on.
 
 | # | Name | File | Section | Depends on | Declared skills |
 |---:|---|---|---:|---|---|
-| 00 | `00-agent-quality-controller` | [`00-agent-quality-controller-agent.md`](.claude/agents/00-agent-quality-controller-agent.md) | — | — | `full-audit` |
-| 01 | `01-full-account-audit` | [`01-full-account-audit-agent.md`](.claude/agents/01-full-account-audit-agent.md) | — | 02 | 21 skills — the orchestrator's full context |
-| 02 | `02-audit-preflight` | [`02-audit-preflight-agent.md`](.claude/agents/02-audit-preflight-agent.md) | — | — | `audit-preflight`, `mcp-discovery`, `meta-ads-mcp` |
-| 03 | `03-delivery-blockers` | [`03-delivery-blockers-agent.md`](.claude/agents/03-delivery-blockers-agent.md) | 5 | — | `meta-ads-mcp`, `meta-ads-data-validation` |
-| 04 | `04-opportunity-score` | [`04-opportunity-score-agent.md`](.claude/agents/04-opportunity-score-agent.md) | 5 | — | `meta-ads-mcp`, `delivery-diagnostics` |
-| 05 | `05-quick-win-ranking` | [`05-quick-win-ranking-agent.md`](.claude/agents/05-quick-win-ranking-agent.md) | 30 | diagnostic sections | `recommendation-prioritization`, `14-day-change-control`, `contribution-margin` |
-| 06 | `06-audit-report` | [`06-audit-report-agent.md`](.claude/agents/06-audit-report-agent.md) | 30 | 05, 156–162 | `coverage-ledger`, `recommendation-prioritization`, `scale-matrix`, `cross-source-reconciliation` |
+| 00 | `00-agent-quality-controller` | [`00-agent-quality-controller-agent.md`](agents/00-agent-quality-controller-agent.md) | — | — | `full-audit` |
+| 01 | `01-full-account-audit` | [`01-full-account-audit-agent.md`](agents/01-full-account-audit-agent.md) | — | 02 | 21 skills — the orchestrator's full context |
+| 02 | `02-audit-preflight` | [`02-audit-preflight-agent.md`](agents/02-audit-preflight-agent.md) | — | — | `audit-preflight`, `mcp-discovery`, `meta-ads-mcp` |
+| 03 | `03-delivery-blockers` | [`03-delivery-blockers-agent.md`](agents/03-delivery-blockers-agent.md) | 5 | — | `meta-ads-mcp`, `meta-ads-data-validation` |
+| 04 | `04-opportunity-score` | [`04-opportunity-score-agent.md`](agents/04-opportunity-score-agent.md) | 5 | — | `meta-ads-mcp`, `delivery-diagnostics` |
+| 05 | `05-quick-win-ranking` | [`05-quick-win-ranking-agent.md`](agents/05-quick-win-ranking-agent.md) | 30 | diagnostic sections | `recommendation-prioritization`, `14-day-change-control`, `contribution-margin` |
+| 06 | `06-audit-report` | [`06-audit-report-agent.md`](agents/06-audit-report-agent.md) | 30 | 05, 156–162 | `coverage-ledger`, `recommendation-prioritization`, `scale-matrix`, `cross-source-reconciliation` |
 
 ## Shipped (Phase 3) — the execution lane (200–213)
 

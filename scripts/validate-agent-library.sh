@@ -9,7 +9,7 @@ cd "$(dirname "$0")/.." || exit 1
 fail=0; count=0
 seen_names=""
 
-for f in .claude/agents/*.md; do
+for f in agents/*.md; do
   [ -e "$f" ] || continue
   base="$(basename "$f")"
   count=$((count + 1))

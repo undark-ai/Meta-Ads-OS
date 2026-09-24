@@ -109,7 +109,7 @@ def main():
     errors, marked = [], []
 
     # --- agents ----------------------------------------------------------------
-    for path in sorted((ROOT / ".claude" / "agents").glob("*.md")):
+    for path in sorted((ROOT / "agents").glob("*.md")):
         text = path.read_text()
         rel = path.relative_to(ROOT)
         num_match = re.match(r"^(\d+)-", path.name)

@@ -14,30 +14,34 @@ the account, but because they optimised numbers that were not true. So the run o
 
 ### 1. Install
 
-**As a plugin** — two commands. The first registers the catalog, the second installs from it.
-Adding the marketplace alone installs nothing:
+Two commands. The first registers the catalog, the second installs from it — adding the
+marketplace alone installs nothing:
 
 ```
 /plugin marketplace add undark-ai/Meta-Ads-OS
 /plugin install meta-ads-os@meta-ads-os
 ```
 
-**By cloning** — clone into the project you want to audit. Claude Code discovers
-`.claude/agents/`, `.claude/skills/` and `.mcp.json` automatically:
+**From a local clone** — same two commands, pointed at the directory instead of the repo. Use this
+if you want to modify the system or work offline:
 
-```bash
+```
 git clone https://github.com/undark-ai/Meta-Ads-OS.git
+/plugin marketplace add ./Meta-Ads-OS
+/plugin install meta-ads-os@meta-ads-os
 ```
 
-The route decides what the command is called, because plugin skills are namespaced and a clone's
-are not:
+Either way, run a full audit with:
 
-| Installed as | Run a full audit with |
-|---|---|
-| Plugin | `/meta-ads-os:full-audit` |
-| Clone | `/full-audit` |
+```
+/meta-ads-os:full-audit
+```
 
-Asking in plain language works either way — *"Run the full Meta Ads audit on my account."*
+Plugin skills are namespaced, so the `meta-ads-os:` prefix is part of the command. Asking in plain
+language also works — *"Run the full Meta Ads audit on my account."*
+
+Verify the install with `claude plugin details meta-ads-os`; it should report 105 skills and 177
+agents.
 
 ### 2. Connect Meta
 
@@ -237,7 +241,7 @@ spenders do not is a failing account.
 ## Structure
 
 ```
-.claude/agents/     177 agents      ← 163 audit (00–162) + 14 execution (200–213). Orchestration 00–06,
+agents/     177 agents      ← 163 audit (00–162) + 14 execution (200–213). Orchestration 00–06,
                                        economics 07–20, measurement 21–36, reconciliation 37–42,
                                        structure & delivery 43–58, creative 59–78, relevance 79–82,
                                        audience 83–92, prospecting & retargeting 93–100,

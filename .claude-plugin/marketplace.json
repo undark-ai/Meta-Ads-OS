@@ -6,8 +6,7 @@
   },
   "metadata": {
     "description": "Meta Ads e-commerce operating system for Claude Code — evidence-first account analysis, a creative learning system, and a fenced execution lane",
-    "version": "1.0.0",
-    "repository": "https://github.com/undark-ai/Meta-Ads-OS"
+    "version": "1.0.0"
   },
   "plugins": [
     {

@@ -136,7 +136,7 @@ bottom in **one pass**. Each section names its owning agents there; the sequence
 
 ```
 0.  audit-preflight — business-context freshness and connector gaps, offered to the user
-1.  /full-audit, or .claude/agents/01-full-account-audit-agent.md
+1.  /full-audit, or agents/01-full-account-audit-agent.md
 2.  Source discovery through the full connector ladder
 3.  §1  Business & economics — names the ONE primary goal. Gate.
 4.  §2  Tracking & measurement — pixel, CAPI, dedup, EMQ, AEM. Gate.

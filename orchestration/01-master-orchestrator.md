@@ -1,6 +1,6 @@
 # Master orchestrator
 
-The execution model behind `.claude/agents/01-full-account-audit-agent.md`. That agent is the
+The execution model behind `agents/01-full-account-audit-agent.md`. That agent is the
 entry point; this describes how a run is driven, so an interrupted or partial run behaves
 predictably.
 

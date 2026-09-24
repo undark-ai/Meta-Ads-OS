@@ -2,7 +2,7 @@
 
 One top-to-bottom sweep of all 30 sections. Section definitions and their agent mapping live in
 `.claude/skills/full-audit/SKILL.md`; the orchestrator is
-`.claude/agents/01-full-account-audit-agent.md`.
+`agents/01-full-account-audit-agent.md`.
 
 ## Sequence
 

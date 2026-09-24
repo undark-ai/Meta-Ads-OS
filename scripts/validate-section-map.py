@@ -29,7 +29,7 @@ WORKFLOW = ROOT / "workflows" / "02-full-account-audit.md"
 def declared_sections():
     """agent number -> section, from frontmatter only."""
     out = {}
-    for path in sorted((ROOT / ".claude" / "agents").glob("*.md")):
+    for path in sorted((ROOT / "agents").glob("*.md")):
         num = re.match(r"(\d+)-", path.name)
         if not num:
             continue

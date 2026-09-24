@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = ROOT / ".claude" / "skills"
-AGENTS_DIR = ROOT / ".claude" / "agents"
+AGENTS_DIR = ROOT / "agents"
 
 FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---", re.S)
 SEE_RE = re.compile(r"\bsee ([a-z0-9]+(?:-[a-z0-9]+)+)\b")

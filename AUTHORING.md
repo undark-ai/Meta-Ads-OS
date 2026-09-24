@@ -5,7 +5,7 @@ the rest. Validate with `scripts/` before committing — see [Validation](#valid
 
 Three kinds of unit, with different jobs:
 
-| | Audit agents (`.claude/agents/`, 00–199) | Skills (`.claude/skills/`) | Execution agents (`.claude/agents/`, 200+) |
+| | Audit agents (`agents/`, 00–199) | Skills (`.claude/skills/`) | Execution agents (`agents/`, 200+) |
 |---|---|---|---|
 | Answers | "What is true about this account?" | "How do I do this well?" | "Apply this approved change" |
 | Invoked | By the orchestrator, or by name | By trigger phrase | By `workflows/08-execution-run` only |

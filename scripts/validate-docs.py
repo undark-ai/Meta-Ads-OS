@@ -53,7 +53,7 @@ def actual():
         "audit": len(audit),
         "execution": len(execution),
         "marketing": len(skills) - len(audit) - len(execution),
-        "agents": len(list((ROOT / ".claude" / "agents").glob("*.md"))),
+        "agents": len(list((ROOT / "agents").glob("*.md"))),
         "integrations": len(list((ROOT / "tools" / "integrations").glob("*.md"))),
         "schemas": len(list((ROOT / "schemas").glob("*"))),
         "workflows": len(list((ROOT / "workflows").glob("*.md"))),
@@ -93,7 +93,7 @@ def main():
             errors.append(f"{fname}: does not state '{human}' — count has drifted from disk")
 
     # --- the structure tree in README -----------------------------------------
-    tree = re.search(r"```\n(\.claude/agents/.*?)```", readme, re.S)
+    tree = re.search(r"```\n(agents/.*?)```", readme, re.S)
     if not tree:
         errors.append(f"{readme_name}: no structure tree found")
     else:

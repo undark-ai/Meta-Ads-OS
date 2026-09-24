@@ -8,6 +8,5 @@
   "homepage": "https://github.com/undark-ai/Meta-Ads-OS",
   "repository": "https://github.com/undark-ai/Meta-Ads-OS",
   "license": "MIT",
-  "agents": "./.claude/agents",
   "skills": "./.claude/skills"
 }
