@@ -1,0 +1,50 @@
+name: validate
+
+# Every check in this repository was previously one someone had to remember to run.
+# The execution boundary in particular is not a style rule: it is what stops an audit
+# agent referencing a tool that mutates a live ad account.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Ordered cheapest-first so a structural break fails before the slower checks run.
+      - name: References — skill names, links, agent to skill resolution
+        run: python3 scripts/validate-references.py
+
+      - name: Agent library — frontmatter, numbering, section mapping
+        run: bash scripts/validate-agent-library.sh
+
+      - name: Skills — spec compliance, line limits, description quality
+        run: bash scripts/validate-skills.sh
+
+      - name: Docs — README tree and counts against disk
+        run: python3 scripts/validate-docs.py
+
+      # The section map is a derived view of the agents' frontmatter. A derived view
+      # that drifts is worse than none: it reads as authoritative and is not.
+      - name: Section map against agent frontmatter
+        run: python3 scripts/validate-section-map.py
+
+      # The one that matters most. Fails the build if an audit agent or audit skill
+      # so much as references a write tool by name, or references a tool the
+      # connector no longer exposes.
+      - name: Execution boundary
+        run: python3 scripts/validate-execution-boundary.py
+
+      - name: Doc freshness — core docs still describe the system
+        run: python3 scripts/validate-doc-freshness.py
+
+      - name: CLI mutation surface still documented
+        run: python3 scripts/audit-cli-writes.py --check
